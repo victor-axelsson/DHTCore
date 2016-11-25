@@ -14,20 +14,22 @@ import java.util.List;
 public class FingerTable {
 
     private Node self;
-    private Node successor;
     private List<Long> fingers;
     private static final int RING_BIT_SIZE = 32;
+    private List<Node> table;
+    RingHandler ringHandler;
 
-    public FingerTable(Node self, Node successor) {
+    public FingerTable(Node self, RingHandler ringHandler) {
         this.self = self;
-        this.successor = successor;
+        this.ringHandler = ringHandler;
         fingers = new ArrayList<>();
+
         setupFingerKeys();
     }
 
     private void setupFingerKeys(){
         for(int i = 0; i < RING_BIT_SIZE; i++){
-            fingers.add((self.getId() + 2^i - 1) % 2 ^ RING_BIT_SIZE);
+            fingers.add((self.getId() + (long)Math.pow(2, i) - 1) % (long)Math.pow(2, RING_BIT_SIZE));
         }
     }
 
@@ -46,19 +48,34 @@ public class FingerTable {
         JSONObject jsonMessage = new JSONObject(message);
         List<Long> keys = (List<Long>)(List<?>)jsonMessage.getJSONArray("keys").toList();
 
-        if(keys.contains(self.getId())){
-            jsonMessage.getJSONArray("fingers").put(new JSONObject(self.toString()));
-            keys.remove(self.getId());
-            jsonMessage.remove("keys");
-            jsonMessage.put("keys", keys);
+
+        for(int i = 0; i < keys.size(); i++){
+            if(ringHandler.isThisOurKey(keys.get(i))){
+                jsonMessage.getJSONArray("fingers").put(new JSONObject(self.toString()));
+                keys.remove(self.getId());
+                jsonMessage.remove("keys");
+                jsonMessage.put("keys", keys);
+            }
         }
 
         if(keys.isEmpty()){
             Node sender = new Node(jsonMessage.toString());
+            jsonMessage.put("type", "finger_probe_response");
             onDone.onResponse(jsonMessage.toString(), sender);
         }
 
         return jsonMessage.toString();
     }
 
+    public void updateTable(String clientMessage) {
+        JSONObject response = new JSONObject(clientMessage);
+        JSONArray fingers = response.getJSONArray("fingers");
+        table = new ArrayList<>();
+
+        for(int i = 0; i < fingers.length(); i++){
+            table.add(new Node(fingers.get(i).toString()));
+        }
+
+
+    }
 }

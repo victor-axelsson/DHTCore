@@ -24,16 +24,16 @@ public class RingHandler {
     Node successor;
     FingerTable fingers;
     Node self;
-    private int port;
-    private String ip;
     ApplicationDomain app;
 
     public RingHandler(String ip, int port, ApplicationDomain app){
-        this.ip = ip;
-        this.port = port;
         this.self = new Node(ip, port);
         this.successor = this.self;
         this.app = app;
+        this.fingers = new FingerTable(self, this);
+
+        updateFingerTable();
+
 
         TimerTask task = new TimerTask() {
             @Override
@@ -48,6 +48,18 @@ public class RingHandler {
 
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(task, delay, interval);
+    }
+
+    private void updateFingerTable(){
+        JSONObject message = new JSONObject(fingers.createFingerProbeMessage());
+        Client c = null;
+        try {
+            c = new Client(successor.getAsSocket(), message.toString(), null);
+            c.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void stabilize(){
@@ -128,7 +140,6 @@ public class RingHandler {
                 sendNotify(successor.getIp(), successor.getPort());
             }
         }
-
     }
 
     public void probe(){
@@ -303,6 +314,10 @@ public class RingHandler {
         lookup(jsonRequest.getLong("key"), initiator);
     }
 
+    public boolean isThisOurKey(long key){
+        return between(key, predecessor.getId(), self.getId());
+    }
+
     private boolean between(long key, long from, long to){
         if(from < to){
             return (key > from) && (key <= to);
@@ -311,14 +326,6 @@ public class RingHandler {
         }else {
             return true;
         }
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public String getIp() {
-        return ip;
     }
 
     public Node getSelf() {
@@ -331,23 +338,25 @@ public class RingHandler {
 
     }
 
-    public void findByKey(long key) {
-        Node receiver = fingers == null ? successor : fingers.getNodeByKey(key);
-        try {
-            JSONObject message = new JSONObject();
-            message.put("type", "find_by_key");
-            message.put("ip", self.getIp());
-            message.put("port", self.getPort());
-            Client c = new Client(receiver.getAsSocket(), message.toString(), null);
-            c.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+    public void handleFingerProbe(String clientMessage, Node node) {
+        fingers.dealWithFingerProbe(clientMessage, new OnResponse<String>() {
+            @Override
+            public String onResponse(String response, Node node) {
+                Client c = null;
+                try {
+                    c = new Client(node.getAsSocket(), response, null);
+                    c.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+        });
     }
 
-    public void handleFindByKey(String clientMessage, Node node){
-
-        JSONObject message = new JSONObject(clientMessage);
-
+    public void fingerProbeResonse(String clientMessage, Node node) {
+        fingers.updateTable(clientMessage);
     }
 }

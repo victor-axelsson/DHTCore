@@ -53,6 +53,12 @@ public class Server {
                 case "notify":
                     response = ringHandler.notifyPredecessor(node);
                     break;
+                case "finger_probe":
+                    ringHandler.handleFingerProbe(clientMessage, node);
+                    break;
+                case "finger_probe_response":
+                    ringHandler.fingerProbeResonse(clientMessage, node);
+                    break;
                 case "probe":
                     ringHandler.handleProbe(clientMessage, node);
                     break;
@@ -131,9 +137,9 @@ public class Server {
         server3.start();
 
         //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
-        server2.sendNotify(server1.getRingHandler().getIp(), server1.getRingHandler().getPort());
+        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
         Thread.sleep(3000);
-        server3.sendNotify(server1.getRingHandler().getIp(), server1.getRingHandler().getPort());
+        server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
         Thread.sleep(3000);
 
         server2.addKey(22, "gravy");
