@@ -1,5 +1,6 @@
 package se.kth.networking.java.first.network;
 
+import org.json.JSONObject;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
 
@@ -40,14 +41,9 @@ public class ClientSocketHandler implements Runnable {
     }
 
     private String deliverMessage(String msg){
-
-        //Do the message parsing
-        String[] parts = msg.split(":");
-        String[] msgArgs = parts[1].split(",");
-
-        Node n = new Node(msgArgs[0], Integer.parseInt(msgArgs[1]));
-
-        return  onResponse.onResponse(msg, n);
+        JSONObject obj = new JSONObject(msg);
+        Node n = new Node(msg);
+        return  onResponse.onResponse(obj.toString(), n);
     }
 
     private void handle(BufferedReader reader, PrintWriter writer) {

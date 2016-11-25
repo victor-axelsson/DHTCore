@@ -1,5 +1,6 @@
 package se.kth.networking.java.first;
 
+import org.json.JSONObject;
 import org.omg.CORBA.INTERNAL;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
@@ -44,11 +45,11 @@ public class Server {
 
     private String handleMessage(String clientMessage, Node node){
 
-        String response = "Bad request";
+        JSONObject message = new JSONObject(clientMessage);
 
+        String response = "Bad request";
         if(isValidMessage(clientMessage)){
-            String[] parts = clientMessage.split(":");
-            switch (parts[0]){
+            switch (message.getString("type")){
                 case "notify":
                     response = ringHandler.notifyPredecessor(node);
                     break;
@@ -65,11 +66,10 @@ public class Server {
                     ringHandler.deliverLookup(clientMessage);
                     break;
                 case "add":
-                    String[] args = parts[1].split(",");
-                    int key = Integer.parseInt(args[2]);
-                    String[] newArgs = Arrays.copyOfRange(args, 3, args.length);
-                    String tmp = String.join(",", newArgs);
-                    ringHandler.addKey(key, tmp);
+                    String payload = message.getString("value");
+                    int key = message.getInt("key");
+
+                    ringHandler.addKey(key, payload);
                     break;
             }
         }

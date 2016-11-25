@@ -1,6 +1,8 @@
 package se.kth.networking.java.first.ring;
 
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import se.kth.networking.java.first.ApplicationDomain;
 import se.kth.networking.java.first.Helper;
 import se.kth.networking.java.first.models.Node;
@@ -49,22 +51,28 @@ public class RingHandler {
 
     private void stabilize(){
         try {
-            String msg = "request:" + self.getIp() + "," + self.getPort();
-            Client c = new Client(successor.getAsSocket(), msg, new OnResponse<String>() {
+
+            JSONObject message = new JSONObject();
+            message.put("type", "request");
+            message.put("ip", self.getIp());
+            message.put("port", self.getPort());
+
+            Client c = new Client(successor.getAsSocket(), message.toString(), new OnResponse<String>() {
                 @Override
                 public String onResponse(String response, Node node) {
 
-                    String[] args = response.split(";");
+                    JSONObject jsonResponse = new JSONObject(response);
 
+                    String[] args = response.split(";");
                     Node otherPredesessor = null;
                     Node otherSuccessor = null;
 
-                    if(!args[0].equalsIgnoreCase("null")){
-                        otherPredesessor = new Node(args[0]);
+                    if(!jsonResponse.getString("predecessor").equalsIgnoreCase("null")){
+                        otherPredesessor = new Node(jsonResponse.getString("predecessor"));
                     }
 
-                    if(!args[1].equalsIgnoreCase("null")){
-                        otherSuccessor = new Node(args[1]);
+                    if(!jsonResponse.getString("successor").equalsIgnoreCase("null")){
+                        otherSuccessor = new Node(jsonResponse.getString("successor"));
                     }
 
                     onStabilizeRequest(otherPredesessor, otherSuccessor);
@@ -78,11 +86,23 @@ public class RingHandler {
     }
 
     public String onRequest(String clientMessage, Node node){
+        JSONObject response = new JSONObject();
+        response.put("ip", self.getIp());
+        response.put("port", self.getPort());
+
         if(predecessor == null){
-            return "null;" + successor.toString();
+            response.put("predecessor", "null");
         }else{
-            return predecessor.toString() + ";" + successor.toString();
+            response.put("predecessor", predecessor.toString());
         }
+
+        if(successor == null){
+            response.put("successor", "null");
+        }else{
+            response.put("successor", successor.toString());
+        }
+
+        return response.toString();
     }
 
     public void onStabilizeRequest(Node otherPredesesor, Node otherSuccessor){
@@ -112,8 +132,14 @@ public class RingHandler {
 
     public void probe(){
         try {
-            String msg = "probe:" + self.getIp() + "," + self.getPort() + "," + self.toString();
-            Client c = new Client(successor.getAsSocket(), msg, null);
+            JSONObject message = new JSONObject();
+            message.put("type", "probe");
+            JSONArray nodes = new JSONArray();
+            nodes.put(new JSONObject(self.toString()));
+            message.put("nodes", nodes);
+
+           // String msg = "probe:" + self.getIp() + "," + self.getPort() + "," + self.toString();
+            Client c = new Client(successor.getAsSocket(), message.toString(), null);
             c.start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -121,16 +147,20 @@ public class RingHandler {
     }
 
     public void handleProbe(String clientMessage, Node node){
-        String[] parts = clientMessage.split(":");
-        String[] args = parts[1].split(",");
 
-        Node initiator = new Node(args[0], Integer.parseInt(args[1]));
+        JSONObject message = new JSONObject(clientMessage);
+
+        Node initiator = new Node(message.getJSONArray("nodes").get(0).toString());
+
+        //Node initiator = new Node(args[0], Integer.parseInt(args[1]));
         if(initiator.getId() == self.getId()){
             System.out.println("I got it back from the ring, " + clientMessage);
         }else{
             try {
-                String msg = clientMessage + "," + self.toString();
-                Client c = new Client(successor.getAsSocket(), msg, null);
+
+                message.put("nodes", message.getJSONArray("nodes").put(new JSONObject(self.toString())));
+
+                Client c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -140,12 +170,22 @@ public class RingHandler {
 
     public void sendNotify(String rIp, int rPort){
         try {
-            String msg = "notify:" + ip + "," + port;
-            Client s = new Client(new Socket(rIp, rPort), msg, new OnResponse<String>() {
+
+            JSONObject message = new JSONObject();
+            message.put("ip", self.getIp());
+            message.put("port", self.getPort());
+            message.put("type", "notify");
+
+            //String msg = "notify:" + ip + "," + port;
+
+            Client s = new Client(new Socket(rIp, rPort), message.toString(), new OnResponse<String>() {
                 @Override
                 public String onResponse(String response, Node node) {
 
-                    if(response.equalsIgnoreCase("accept")){
+                    JSONObject jsonResonse = new JSONObject(response);
+                    String status = jsonResonse.getString("status");
+
+                    if(status.equalsIgnoreCase("accept")){
                         successor = node;
                     }else{
                         // Now what? I think this will be fixed with stabilization
@@ -163,19 +203,29 @@ public class RingHandler {
 
 
     public String notifyPredecessor(Node n){
+
+        JSONObject response = new JSONObject();
+        response.put("ip", self.getIp());
+        response.put("port", self.getPort());
+
         if(predecessor == null){
 
             // We don't have any predecessor, life is good
             predecessor = n;
-            return "accept";
+            response.put("status", "accept");
+
+            return response.toString();
         }else{
 
             //This should be our new predecessor
             if(between(n.getId(), predecessor.getId(), self.getId())){
                 predecessor = n;
-                return "accept";
+
+                response.put("status", "accept");
+                return response.toString();
             }else{
-                return "deny";
+                response.put("status", "deny");
+                return response.toString();
             }
         }
     }
@@ -184,10 +234,18 @@ public class RingHandler {
         if(between(key, predecessor.getId(), self.getId())){
             app.storeKey(key, value);
         }else{
-            String msg = "add:" + self.getIp() + "," + self.getPort() + "," + key + "," + value;
+
+            JSONObject message = new JSONObject();
+            message.put("ip", self.getIp());
+            message.put("port", self.getPort());
+            message.put("type", "add");
+            message.put("key", key);
+            message.put("value", value);
+
+            //String msg = "add:" + self.getIp() + "," + self.getPort() + "," + key + "," + value;
             Client c = null;
             try {
-                c = new Client(successor.getAsSocket(), msg, null);
+                c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -196,23 +254,38 @@ public class RingHandler {
     }
 
     public void lookup(int key, Node asker){
+
+        JSONObject message = new JSONObject();
+        message.put("ip", self.getIp());
+        message.put("port", self.getPort());
+
         if(between(key, predecessor.getId(), self.getId())){
             //do the lookup on this node
             String value = app.getKey(key);
-            String msg = "lookup_response:" + self.getIp() + "," + self.getPort() + "," + key + "," + value;
+
+            message.put("type", "lookup_response");
+            message.put("key", key);
+            message.put("value", value);
+
+            //String msg = "lookup_response:" + self.getIp() + "," + self.getPort() + "," + key + "," + value;
             Client c = null;
             try {
-                c = new Client(successor.getAsSocket(), msg, null);
+                c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
         }else{
-            String msg = "lookup:" + self.getIp() + "," + self.getPort() + "," + key + "," + asker.toString();
+
+            message.put("type", "lookup");
+            message.put("key", key);
+            message.put("asker", new JSONObject(asker.toString()));
+
+            //String msg = "lookup:" + self.getIp() + "," + self.getPort() + "," + key + "," + asker.toString();
             Client c = null;
             try {
-                c = new Client(successor.getAsSocket(), msg, null);
+                c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -221,16 +294,22 @@ public class RingHandler {
     }
 
     public void lookup(String message){
+
+        JSONObject jsonRequest = new JSONObject(message);
+
         //Example of a message:
         //lookup:127.0.0.1,6060,55,{"port":6060,"ip":"127.0.0.1","id":-1109658127}
 
+        /*
         String argsPart = message.substring("lookup:".length());
         String[] args = argsPart.split(",");
         int key = Integer.parseInt(args[2]);
         String[] jsonParts = Arrays.copyOfRange(args, 3, args.length);
-        Node initiator = new Node(String.join(",", jsonParts));
+        */
 
-        lookup(key, initiator);
+        Node initiator = new Node(jsonRequest.getJSONObject("asker").toString());
+
+        lookup(jsonRequest.getInt("key"), initiator);
     }
 
     private boolean between(int key, int from, int to){
@@ -258,15 +337,19 @@ public class RingHandler {
     public void deliverLookup(String clientMessage) {
         //lookup_response:127.0.0.1,5050,55,["SomeData"],{"port":5050,"ip":"127.0.0.1","id":-1109687949}
 
+        JSONObject jsonRequest = new JSONObject(clientMessage);
+
+        /*
         String argsPart = clientMessage.substring("lookup_response:".length());
         String[] args = argsPart.split(",");
         int key = Integer.parseInt(args[2]);
         String[] jsonParts = Arrays.copyOfRange(args, 3, args.length);
         String data = String.join(",", jsonParts);
+        */
 
         //Node keyKeeper = new Node(args[0], Integer.parseInt(args[1]));
 
-        app.foundKey(key, data);
+        app.foundKey(jsonRequest.getInt("key"), jsonRequest.getString("value"));
 
     }
 }
