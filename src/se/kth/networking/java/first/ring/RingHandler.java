@@ -230,7 +230,7 @@ public class RingHandler {
         }
     }
 
-    public void addKey(int key, String value){
+    public void addKey(long key, String value){
         if(between(key, predecessor.getId(), self.getId())){
             app.storeKey(key, value);
         }else{
@@ -253,7 +253,7 @@ public class RingHandler {
         }
     }
 
-    public void lookup(int key, Node asker){
+    public void lookup(long key, Node asker){
 
         JSONObject message = new JSONObject();
         message.put("ip", self.getIp());
@@ -309,10 +309,10 @@ public class RingHandler {
 
         Node initiator = new Node(jsonRequest.getJSONObject("asker").toString());
 
-        lookup(jsonRequest.getInt("key"), initiator);
+        lookup(jsonRequest.getLong("key"), initiator);
     }
 
-    private boolean between(int key, int from, int to){
+    private boolean between(long key, long from, long to){
         if(from < to){
             return (key > from) && (key <= to);
         }else if(from > to){
@@ -335,21 +335,8 @@ public class RingHandler {
     }
 
     public void deliverLookup(String clientMessage) {
-        //lookup_response:127.0.0.1,5050,55,["SomeData"],{"port":5050,"ip":"127.0.0.1","id":-1109687949}
-
         JSONObject jsonRequest = new JSONObject(clientMessage);
-
-        /*
-        String argsPart = clientMessage.substring("lookup_response:".length());
-        String[] args = argsPart.split(",");
-        int key = Integer.parseInt(args[2]);
-        String[] jsonParts = Arrays.copyOfRange(args, 3, args.length);
-        String data = String.join(",", jsonParts);
-        */
-
-        //Node keyKeeper = new Node(args[0], Integer.parseInt(args[1]));
-
-        app.foundKey(jsonRequest.getInt("key"), jsonRequest.getString("value"));
+        app.foundKey(jsonRequest.getLong("key"), jsonRequest.getString("value"));
 
     }
 }

@@ -67,7 +67,7 @@ public class Server {
                     break;
                 case "add":
                     String payload = message.getString("value");
-                    int key = message.getInt("key");
+                    long key = message.getLong("key");
 
                     ringHandler.addKey(key, payload);
                     break;
@@ -100,21 +100,21 @@ public class Server {
 
         ApplicationDomain app = new ApplicationDomain() {
 
-            HashMap<Integer, String> store = new HashMap<>();
+            HashMap<Long, String> store = new HashMap<>();
 
             @Override
-            public void storeKey(int key, String value) {
+            public void storeKey(long key, String value) {
                 store.put(key, value);
                 System.out.println(key + ":" + value);
             }
 
             @Override
-            public String getKey(int key) {
+            public String getKey(long key) {
                 return store.get(key);
             }
 
             @Override
-            public void foundKey(int key, String value) {
+            public void foundKey(long key, String value) {
                 System.out.println("Key:" + key + ", Value: " + value);
             }
         };

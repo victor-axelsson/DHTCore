@@ -1,6 +1,7 @@
 package se.kth.networking.java.first.models;
 
 import org.json.JSONObject;
+import se.kth.networking.java.first.Helper;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -10,12 +11,12 @@ import java.net.Socket;
  */
 public class Node {
 
-    private int id;
+    private long id;
     private String ip;
     private int port;
 
     public Node(String ip, int port) {
-        id = (ip + port).hashCode();
+        id = Helper.doHash(ip, port);
         this.ip = ip;
         this.port = port;
     }
@@ -24,10 +25,10 @@ public class Node {
         JSONObject obj = new JSONObject(json);
         this.ip = obj.optString("ip");
         this.port = obj.optInt("port");
-        id = (this.ip + this.port).hashCode();
+        id = Helper.doHash(ip, port);
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
