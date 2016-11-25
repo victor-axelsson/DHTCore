@@ -1,5 +1,6 @@
 package se.kth.networking.java.first;
 
+import org.omg.CORBA.INTERNAL;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
 import se.kth.networking.java.first.network.ClientAcceptor;
@@ -7,6 +8,7 @@ import se.kth.networking.java.first.ring.RingHandler;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Created by Nick on 11/2/2016.
@@ -92,17 +94,23 @@ public class Server {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        int port = Integer.valueOf(args[0]);
+       // int port = Integer.valueOf(args[0]);
+
+
 
         ApplicationDomain app = new ApplicationDomain() {
+
+            HashMap<Integer, String> store = new HashMap<>();
+
             @Override
             public void storeKey(int key, String value) {
+                store.put(key, value);
                 System.out.println(key + ":" + value);
             }
 
             @Override
             public String getKey(int key) {
-                return "[\"SomeData\"]";
+                return store.get(key);
             }
 
             @Override
@@ -134,6 +142,8 @@ public class Server {
         Thread.sleep(3000);
 
         server2.lookup(55);
+
+        server3.probe();
 
         System.out.println("done");
     }
