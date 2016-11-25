@@ -22,6 +22,7 @@ public class RingHandler {
 
     Node predecessor;
     Node successor;
+    FingerTable fingers;
     Node self;
     private int port;
     private String ip;
@@ -297,16 +298,6 @@ public class RingHandler {
 
         JSONObject jsonRequest = new JSONObject(message);
 
-        //Example of a message:
-        //lookup:127.0.0.1,6060,55,{"port":6060,"ip":"127.0.0.1","id":-1109658127}
-
-        /*
-        String argsPart = message.substring("lookup:".length());
-        String[] args = argsPart.split(",");
-        int key = Integer.parseInt(args[2]);
-        String[] jsonParts = Arrays.copyOfRange(args, 3, args.length);
-        */
-
         Node initiator = new Node(jsonRequest.getJSONObject("asker").toString());
 
         lookup(jsonRequest.getLong("key"), initiator);
@@ -337,6 +328,26 @@ public class RingHandler {
     public void deliverLookup(String clientMessage) {
         JSONObject jsonRequest = new JSONObject(clientMessage);
         app.foundKey(jsonRequest.getLong("key"), jsonRequest.getString("value"));
+
+    }
+
+    public void findByKey(long key) {
+        Node receiver = fingers == null ? successor : fingers.getNodeByKey(key);
+        try {
+            JSONObject message = new JSONObject();
+            message.put("type", "find_by_key");
+            message.put("ip", self.getIp());
+            message.put("port", self.getPort());
+            Client c = new Client(receiver.getAsSocket(), message.toString(), null);
+            c.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void handleFindByKey(String clientMessage, Node node){
+
+        JSONObject message = new JSONObject(clientMessage);
 
     }
 }

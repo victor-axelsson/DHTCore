@@ -13,8 +13,6 @@ import java.util.Random;
 public class Helper {
 
     private static Helper instance;
-    public static long QUARTER_RING_OFFSET = 1073741824L;
-    public static long HALF_RING_OFFSET = 2147483648L;
 
     //Singelton, the ctor is private to restrict access
     private Helper(){}
