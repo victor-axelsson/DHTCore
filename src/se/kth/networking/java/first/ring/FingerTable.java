@@ -46,19 +46,23 @@ public class FingerTable {
 
     public String dealWithFingerProbe(String message, OnResponse<String> onDone){
         JSONObject jsonMessage = new JSONObject(message);
-        List<Long> keys = (List<Long>)(List<?>)jsonMessage.getJSONArray("keys").toList();
+        List<Object> keys = jsonMessage.getJSONArray("keys").toList();
 
+        List<Long> notFoundKeys = new ArrayList<>();
 
         for(int i = 0; i < keys.size(); i++){
-            if(ringHandler.isThisOurKey(keys.get(i))){
+            Long key = Long.parseLong(keys.get(i).toString());
+            if(ringHandler.isThisOurKey(key)){
                 jsonMessage.getJSONArray("fingers").put(new JSONObject(self.toString()));
-                keys.remove(self.getId());
-                jsonMessage.remove("keys");
-                jsonMessage.put("keys", keys);
+            } else {
+                notFoundKeys.add(key);
             }
         }
 
-        if(keys.isEmpty()){
+        jsonMessage.remove("keys");
+        jsonMessage.put("keys", notFoundKeys);
+
+        if(notFoundKeys.isEmpty()){
             Node sender = new Node(jsonMessage.toString());
             jsonMessage.put("type", "finger_probe_response");
             onDone.onResponse(jsonMessage.toString(), sender);
@@ -75,7 +79,5 @@ public class FingerTable {
         for(int i = 0; i < fingers.length(); i++){
             table.add(new Node(fingers.get(i).toString()));
         }
-
-
     }
 }

@@ -1,14 +1,12 @@
 package se.kth.networking.java.first;
 
 import org.json.JSONObject;
-import org.omg.CORBA.INTERNAL;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
 import se.kth.networking.java.first.network.ClientAcceptor;
 import se.kth.networking.java.first.ring.RingHandler;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -57,7 +55,7 @@ public class Server {
                     ringHandler.handleFingerProbe(clientMessage, node);
                     break;
                 case "finger_probe_response":
-                    ringHandler.fingerProbeResonse(clientMessage, node);
+                    ringHandler.fingerProbeResponse(clientMessage, node);
                     break;
                 case "probe":
                     ringHandler.handleProbe(clientMessage, node);

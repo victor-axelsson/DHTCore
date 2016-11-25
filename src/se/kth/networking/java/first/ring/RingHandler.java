@@ -32,9 +32,6 @@ public class RingHandler {
         this.app = app;
         this.fingers = new FingerTable(self, this);
 
-        updateFingerTable();
-
-
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
@@ -48,6 +45,20 @@ public class RingHandler {
 
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(task, delay, interval);
+
+        TimerTask fingers = new TimerTask() {
+            @Override
+            public void run() {
+                updateFingerTable();
+            }
+        };
+
+        //Set a random day so that the stabalizers don't run at the same time
+        int interval2 = 3000;
+        int delay2 = Helper.getHelper().getRandom(10, interval);
+
+        Timer timer2 = new Timer();
+        timer2.scheduleAtFixedRate(fingers, delay2, interval2);
     }
 
     private void updateFingerTable(){
@@ -315,6 +326,7 @@ public class RingHandler {
     }
 
     public boolean isThisOurKey(long key){
+        if (predecessor == null) return true;
         return between(key, predecessor.getId(), self.getId());
     }
 
@@ -356,7 +368,7 @@ public class RingHandler {
         });
     }
 
-    public void fingerProbeResonse(String clientMessage, Node node) {
+    public void fingerProbeResponse(String clientMessage, Node node) {
         fingers.updateTable(clientMessage);
     }
 }
