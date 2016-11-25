@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +15,8 @@ import java.util.List;
 public class FingerTable {
 
     private Node self;
-    private List<Long> fingers;
-    private static final int RING_BIT_SIZE = 32;
+    private List<BigInteger> fingers;
+    private static final int RING_BIT_SIZE = 128;
     private List<Node> table;
     RingHandler ringHandler;
 
@@ -29,7 +30,8 @@ public class FingerTable {
 
     private void setupFingerKeys(){
         for(int i = 0; i < RING_BIT_SIZE; i++){
-            fingers.add((self.getId() + (long)Math.pow(2, i) - 1) % (long)Math.pow(2, RING_BIT_SIZE));
+            fingers.add((self.getId().add(new BigInteger(String.valueOf(2)).pow(i)).subtract(BigInteger.ONE))
+                    .mod(new BigInteger(String.valueOf(2)).pow(RING_BIT_SIZE)));
         }
     }
 
@@ -48,10 +50,10 @@ public class FingerTable {
         JSONObject jsonMessage = new JSONObject(message);
         List<Object> keys = jsonMessage.getJSONArray("keys").toList();
 
-        List<Long> notFoundKeys = new ArrayList<>();
+        List<BigInteger> notFoundKeys = new ArrayList<>();
 
         for(int i = 0; i < keys.size(); i++){
-            Long key = Long.parseLong(keys.get(i).toString());
+            BigInteger key = new BigInteger(keys.get(i).toString());
             if(ringHandler.isThisOurKey(key)){
                 jsonMessage.getJSONArray("fingers").put(new JSONObject(self.toString()));
             } else {
@@ -62,6 +64,7 @@ public class FingerTable {
         jsonMessage.remove("keys");
         jsonMessage.put("keys", notFoundKeys);
 
+
         if(notFoundKeys.isEmpty()){
             Node sender = new Node(jsonMessage.toString());
             jsonMessage.put("type", "finger_probe_response");
@@ -71,7 +74,7 @@ public class FingerTable {
         return jsonMessage.toString();
     }
 
-    public void updateTable(String clientMessage) {
+    public synchronized void updateTable(String clientMessage) {
         JSONObject response = new JSONObject(clientMessage);
         JSONArray fingers = response.getJSONArray("fingers");
         table = new ArrayList<>();
@@ -79,5 +82,7 @@ public class FingerTable {
         for(int i = 0; i < fingers.length(); i++){
             table.add(new Node(fingers.get(i).toString()));
         }
+
+        System.out.println("Table is " + table);
     }
 }

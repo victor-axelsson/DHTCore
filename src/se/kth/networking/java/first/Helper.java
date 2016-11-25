@@ -28,16 +28,16 @@ public class Helper {
         return (int) (Math.random() * (max - min)) + min;
     }
 
-    public static long doHash(String ip, int port) {
+    public static BigInteger doHash(String ip, int port) {
         return hash(ip + port);
     }
 
-    private static long hash(String toHash)
+    private static BigInteger hash(String toHash)
     {
         String sha1 = "";
         try
         {
-            MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+            MessageDigest crypt = MessageDigest.getInstance("MD5");
             crypt.reset();
             crypt.update(toHash.getBytes("UTF-8"));
             sha1 = byteToHex(crypt.digest());
@@ -50,7 +50,8 @@ public class Helper {
         {
             e.printStackTrace();
         }
-        return fromHexToDecimal(sha1.toUpperCase());
+
+        return new BigInteger(String.valueOf(fromHexToDecimal(sha1.toUpperCase())));
     }
 
     private static String byteToHex(final byte[] hash)
@@ -65,14 +66,14 @@ public class Helper {
         return result;
     }
 
-    private static long fromHexToDecimal(String s) {
+    private static BigInteger fromHexToDecimal(String s) {
         String digits = "0123456789ABCDEF";
         s = s.toUpperCase();
-        int val = 0;
+        BigInteger val = BigInteger.ZERO;
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             int d = digits.indexOf(c);
-            val = 16*val + d;
+            val = val.multiply(BigInteger.valueOf(16)).add(BigInteger.valueOf(d));
         }
         return val;
     }

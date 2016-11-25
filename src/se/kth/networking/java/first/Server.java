@@ -7,7 +7,12 @@ import se.kth.networking.java.first.network.ClientAcceptor;
 import se.kth.networking.java.first.ring.RingHandler;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Nick on 11/2/2016.
@@ -37,8 +42,25 @@ public class Server {
         }
     }
 
+    public Server(ApplicationDomain app) {
+        this(app, selectAFreePort());
+    }
+
+    private static int selectAFreePort(){
+        ServerSocket socket = null;
+        int port = 0;
+        try {
+            socket = new ServerSocket(0);
+            port = socket.getLocalPort();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return port;
+    }
+
     private boolean isValidMessage(String msg){
-        return msg != null && !msg.trim().equalsIgnoreCase(":") && msg.contains(":");
+        return msg != null;
     }
 
     private String handleMessage(String clientMessage, Node node){
@@ -52,6 +74,7 @@ public class Server {
                     response = ringHandler.notifyPredecessor(node);
                     break;
                 case "finger_probe":
+                    System.out.println(clientMessage.toString());
                     ringHandler.handleFingerProbe(clientMessage, node);
                     break;
                 case "finger_probe_response":
@@ -71,7 +94,7 @@ public class Server {
                     break;
                 case "add":
                     String payload = message.getString("value");
-                    long key = message.getLong("key");
+                    BigInteger key = message.getBigInteger("key");
 
                     ringHandler.addKey(key, payload);
                     break;
@@ -81,11 +104,11 @@ public class Server {
         return response;
     }
 
-    public void addKey(int key, String value){
+    public void addKey(BigInteger key, String value){
         ringHandler.addKey(key, value);
     }
 
-    public void lookup(int key){
+    public void lookup(BigInteger key){
         ringHandler.lookup(key, ringHandler.getSelf());
     }
 
@@ -104,21 +127,21 @@ public class Server {
 
         ApplicationDomain app = new ApplicationDomain() {
 
-            HashMap<Long, String> store = new HashMap<>();
+            HashMap<BigInteger, String> store = new HashMap<>();
 
             @Override
-            public void storeKey(long key, String value) {
+            public void storeKey(BigInteger key, String value) {
                 store.put(key, value);
                 System.out.println(key + ":" + value);
             }
 
             @Override
-            public String getKey(long key) {
+            public String getKey(BigInteger key) {
                 return store.get(key);
             }
 
             @Override
-            public void foundKey(long key, String value) {
+            public void foundKey(BigInteger key, String value) {
                 System.out.println("Key:" + key + ", Value: " + value);
             }
         };
@@ -126,30 +149,56 @@ public class Server {
         Server server1 = new Server(app, 5050);
         server1.start();
 
-        Server server2 = new Server(app, 6060);
-        server2.start();
+//        Server server2 = new Server(app, 6060);
+//        server2.start();
+//
+//        Thread.sleep(3000);
+//
+//        Server server3 = new Server(app, 7070);
+//        server3.start();
+//
+//        //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
+//        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+//        Thread.sleep(3000);
+//        server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+//        Thread.sleep(3000);
+//
+//        server2.addKey(new BigInteger("22"), "gravy");
+//        server2.addKey(new BigInteger("55"), "stuff");
+//
+//        //Thread.sleep(3000);
+//
+//        server2.lookup(new BigInteger("55"));
+//
+//        server3.probe();
 
-        Thread.sleep(3000);
+        for (int i = 0; i < 3; i++) {
+            Server s = new Server(app);
+            s.start();
+            s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        }
 
-        Server server3 = new Server(app, 7070);
-        server3.start();
-
-        //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
-        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-        Thread.sleep(3000);
-        server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-        Thread.sleep(3000);
-
-        server2.addKey(22, "gravy");
-        server2.addKey(55, "stuff");
-
-        Thread.sleep(3000);
-
-        server2.lookup(55);
-
-        server3.probe();
+        Thread.sleep(10000);
+        server1.probe();
 
         System.out.println("done");
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                Server s = new Server(app);
+                s.start();
+                s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+            }
+        };
+
+        //Set a random day so that the stabalizers don't run at the same time
+        int interval = 500;
+        int delay = Helper.getHelper().getRandom(10, interval);
+
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(task, delay, interval);
+
     }
 
     private void start() {

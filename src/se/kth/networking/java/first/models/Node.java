@@ -4,6 +4,7 @@ import org.json.JSONObject;
 import se.kth.networking.java.first.Helper;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
 
 /**
@@ -11,7 +12,7 @@ import java.net.Socket;
  */
 public class Node {
 
-    private long id;
+    private BigInteger id;
     private String ip;
     private int port;
 
@@ -28,7 +29,7 @@ public class Node {
         id = Helper.doHash(ip, port);
     }
 
-    public long getId() {
+    public BigInteger getId() {
         return id;
     }
 
