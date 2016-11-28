@@ -30,15 +30,19 @@ public class ClientAcceptor extends Thread{
 
     @Override
     public void run() {
-        while(true) {
+        boolean running = true;
+        while(running) {
             Socket client = null;
             try {
                 client = serverSocket.accept();
                 handleClient(client);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Socket was closed in ClientAcceptor, stop execution of the node " +
+                        serverSocket.getInetAddress().getHostName() + ":" + serverSocket.getLocalPort());
+                running = false;
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                running = false;
             }
         }
     }
@@ -47,6 +51,7 @@ public class ClientAcceptor extends Thread{
         try {
             this.executorService.shutdown();
             this.serverSocket.close();
+            this.interrupt();
         } catch (IOException e) {
             e.printStackTrace();
         }

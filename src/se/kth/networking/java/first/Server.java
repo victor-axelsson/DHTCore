@@ -152,38 +152,39 @@ public class Server {
         Server server1 = new Server(app, 5050);
         server1.start();
 
-//        Server server2 = new Server(app, 6060);
-//        server2.start();
-//
-//        Thread.sleep(3000);
-//
-//        Server server3 = new Server(app, 7070);
-//        server3.start();
-//
-//        //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
-//        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-//        Thread.sleep(3000);
-//        server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-//        Thread.sleep(3000);
-//
-//        server2.addKey(new BigInteger("22"), "gravy");
-//        server2.addKey(new BigInteger("55"), "stuff");
-//
-//        //Thread.sleep(3000);
-//
-//        server2.lookup(new BigInteger("55"));
-//
-//        server3.probe();
+        Server server2 = new Server(app, 6060);
+        server2.start();
 
-        for (int i = 0; i < 3; i++) {
-            Server s = new Server(app);
-            s.start();
-            s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-        }
+        Thread.sleep(3000);
+
+        Server server3 = new Server(app, 7070);
+        server3.start();
+
+        //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
+        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        Thread.sleep(3000);
+        server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        Thread.sleep(3000);
+
+        server2.addKey(new BigInteger("22"), "gravy");
+        server2.addKey(new BigInteger("55"), "stuff");
+
+        //Thread.sleep(3000);
+
+        server2.lookup(new BigInteger("55"));
+
+        server3.probe();
+
+//        for (int i = 0; i < 3; i++) {
+//            Server s = new Server(app);
+//            s.start();
+//            s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+//        }
 
         Thread.sleep(10000);
         server1.probe();
-
+        server1.stop();
+        server3.probe();
         System.out.println("done");
 
 //        TimerTask task = new TimerTask() {
@@ -206,6 +207,10 @@ public class Server {
 
     private void start() {
         acceptor.start();
+    }
+
+    private void stop() {
+        acceptor.shutdown();
     }
 
     public RingHandler getRingHandler() {

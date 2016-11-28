@@ -76,7 +76,7 @@ public class RingHandler {
             c = new Client(successor.getAsSocket(), message.toString(), null);
             c.start();
         } catch (IOException e) {
-            e.printStackTrace();
+            handleUnresponsiveSuccessorNode();
         }
 
     }
@@ -113,7 +113,7 @@ public class RingHandler {
             });
             c.start();
         } catch (IOException e) {
-            e.printStackTrace();
+            handleUnresponsiveSuccessorNode();
         }
     }
 
@@ -172,8 +172,9 @@ public class RingHandler {
             // String msg = "probe:" + self.getIp() + "," + self.getPort() + "," + self.toString();
             Client c = new Client(successor.getAsSocket(), message.toString(), null);
             c.start();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException e) { //if exception -> node died
+            handleUnresponsiveSuccessorNode();
+            if (successor != null && nextSuccessor != null) probe(); // todo drop probe?
         }
     }
 
@@ -193,7 +194,7 @@ public class RingHandler {
                 Client c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
-                e.printStackTrace();
+                handleUnresponsiveSuccessorNode();
             }
         }
     }
@@ -230,7 +231,7 @@ public class RingHandler {
             });
             s.start();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(rIp + ":" + rPort + " was unresponsive"); //todo do we need to do anything else?
         }
     }
 
@@ -245,7 +246,7 @@ public class RingHandler {
                     message.toString(), null);
             s.start();
         } catch (IOException e) {
-            e.printStackTrace();
+            handleUnresponsivePredecessorNode();
         }
     }
 
@@ -269,7 +270,7 @@ public class RingHandler {
             });
             s.start();
         } catch (IOException e) {
-            e.printStackTrace();
+            handleUnresponsiveSuccessorNode();
         }
 
     }
@@ -320,7 +321,7 @@ public class RingHandler {
                 c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
-                e.printStackTrace();
+                handleUnresponsiveSuccessorNode();
             }
         }
     }
@@ -345,7 +346,7 @@ public class RingHandler {
                 c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
-                e.printStackTrace();
+                handleUnresponsiveSuccessorNode();
             }
 
         } else {
@@ -360,7 +361,7 @@ public class RingHandler {
                 c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
-                e.printStackTrace();
+                handleUnresponsiveSuccessorNode();
             }
         }
     }
@@ -409,7 +410,7 @@ public class RingHandler {
                     c = new Client(node.getAsSocket(), response, null);
                     c.start();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println(node.getIp() + ":" + node.getPort() + " was unresponsive"); //todo do we need to do anything else?
                 }
 
                 return null;
@@ -421,9 +422,25 @@ public class RingHandler {
             c = new Client(successor.getAsSocket(), message, null);
             c.start();
         } catch (IOException e) {
-            e.printStackTrace();
+            handleUnresponsiveSuccessorNode();
         }
 
+    }
+
+    private void handleUnresponsiveSuccessorNode() {
+        System.out.println(successor.toString() + " is not responding to " + self.toString());
+        if (nextSuccessor != null) {
+            successor = nextSuccessor;
+            nextSuccessor = null;
+            updateNextSuccessor();
+        } else {
+            successor = self; //TODO drop probe?
+        }
+    }
+
+    private void handleUnresponsivePredecessorNode() {
+        System.out.println(predecessor.toString() + " is not responding to " + self.toString());
+        predecessor = self;
     }
 
     public void fingerProbeResponse(String clientMessage, Node node) {
