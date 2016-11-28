@@ -184,24 +184,27 @@ public class Server {
         Thread.sleep(10000);
         server1.probe();
         server1.stop();
-        server3.probe();
+//        server3.probe();
+        Thread.sleep(10000);
         System.out.println("done");
 
-//        TimerTask task = new TimerTask() {
-//            @Override
-//            public void run() {
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("run probe");
+                server3.probe();
 //                Server s = new Server(app);
 //                s.start();
 //                s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-//            }
-//        };
-//
-//        //Set a random day so that the stabalizers don't run at the same time
-//        int interval = 500;
-//        int delay = Helper.getHelper().getRandom(10, interval);
-//
-//        Timer timer = new Timer();
-//        timer.scheduleAtFixedRate(task, delay, interval);
+            }
+        };
+
+        //Set a random day so that the stabalizers don't run at the same time
+        int interval = 500;
+        int delay = Helper.getHelper().getRandom(10, interval);
+
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(task, delay, interval);
 
     }
 
