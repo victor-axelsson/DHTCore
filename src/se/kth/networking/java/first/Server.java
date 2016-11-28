@@ -74,7 +74,7 @@ public class Server {
                     response = ringHandler.notifyPredecessor(node);
                     break;
                 case "finger_probe":
-                    System.out.println(clientMessage.toString());
+                    //System.out.println(clientMessage.toString()); TODO debug purposes
                     ringHandler.handleFingerProbe(clientMessage, node);
                     break;
                 case "finger_probe_response":
@@ -91,6 +91,9 @@ public class Server {
                     break;
                 case "lookup_response":
                     ringHandler.deliverLookup(clientMessage);
+                    break;
+                case "successorChanged":
+                    ringHandler.updateNextSuccessor();
                     break;
                 case "add":
                     String payload = message.getString("value");
@@ -183,21 +186,21 @@ public class Server {
 
         System.out.println("done");
 
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                Server s = new Server(app);
-                s.start();
-                s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-            }
-        };
-
-        //Set a random day so that the stabalizers don't run at the same time
-        int interval = 500;
-        int delay = Helper.getHelper().getRandom(10, interval);
-
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(task, delay, interval);
+//        TimerTask task = new TimerTask() {
+//            @Override
+//            public void run() {
+//                Server s = new Server(app);
+//                s.start();
+//                s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+//            }
+//        };
+//
+//        //Set a random day so that the stabalizers don't run at the same time
+//        int interval = 500;
+//        int delay = Helper.getHelper().getRandom(10, interval);
+//
+//        Timer timer = new Timer();
+//        timer.scheduleAtFixedRate(task, delay, interval);
 
     }
 

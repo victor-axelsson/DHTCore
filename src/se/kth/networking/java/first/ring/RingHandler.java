@@ -24,6 +24,7 @@ public class RingHandler {
 
     Node predecessor;
     Node successor;
+    Node nextSuccessor;
     FingerTable fingers;
     Node self;
     ApplicationDomain app;
@@ -142,10 +143,10 @@ public class RingHandler {
             // It have no predecessor, notify our successor that its predecessor might be us
             sendNotify(successor.getIp(), successor.getPort());
 
-        } else if (otherPredesesor.getId() == self.getId()) {
+        } else if (Objects.equals(otherPredesesor.getId(), self.getId())) {
             //All is well, its us.
 
-        } else if (otherPredesesor.getId() == successor.getId()) {
+        } else if (Objects.equals(otherPredesesor.getId(), successor.getId())) {
             //The successors predesessor is itself, we should probably be there instead
             sendNotify(successor.getIp(), successor.getPort());
 
@@ -220,6 +221,9 @@ public class RingHandler {
                         // Now what? I think this will be fixed with stabilization
                         successor = node;
                     }
+                    updateNextSuccessor();
+                    if (predecessor != null)
+                        notifyPredecessorOfNewSuccessor();
 
                     return null;
                 }
@@ -230,6 +234,45 @@ public class RingHandler {
         }
     }
 
+    private void notifyPredecessorOfNewSuccessor() {
+        JSONObject message = new JSONObject();
+        message.put("ip", self.getIp());
+        message.put("port", self.getPort());
+        message.put("type", "successorChanged");
+
+        try {
+            Client s = new Client(new Socket(predecessor.getIp(), predecessor.getPort()),
+                    message.toString(), null);
+            s.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateNextSuccessor() {
+        JSONObject message = new JSONObject();
+        message.put("ip", self.getIp());
+        message.put("port", self.getPort());
+        message.put("type", "request");
+
+        try {
+            Client s = new Client(new Socket(successor.getIp(), successor.getPort()),
+                    message.toString(), (response, node) -> {
+
+                JSONObject jsonResonse = new JSONObject(response);
+                String successor = jsonResonse.getString("successor");
+
+                if (!successor.equalsIgnoreCase("null")) {
+                    nextSuccessor = new Node(successor);
+                }
+                return null;
+            });
+            s.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     public String notifyPredecessor(Node n) {
 
