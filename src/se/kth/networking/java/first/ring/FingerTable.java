@@ -64,7 +64,6 @@ public class FingerTable {
         jsonMessage.remove("keys");
         jsonMessage.put("keys", notFoundKeys);
 
-
         if(notFoundKeys.isEmpty()){
             Node sender = new Node(jsonMessage.toString());
             jsonMessage.put("type", "finger_probe_response");
@@ -83,6 +82,6 @@ public class FingerTable {
             table.add(new Node(fingers.get(i).toString()));
         }
 
-        //System.out.println("Table is " + table); TODO debug fingers
+        //System.out.println("Table is " + table);
     }
 }

@@ -29,66 +29,63 @@ public class RingHandler {
     Node self;
     ApplicationDomain app;
     Timer stabilizeTimer;
+    Timer fingerTimer;
 
     public RingHandler(String ip, int port, ApplicationDomain app) {
         this.self = new Node(ip, port);
         this.successor = this.self;
         this.app = app;
-        //this.fingers = new FingerTable(self, this);
+        this.fingers = new FingerTable(self, this);
 
-        TimerTask task = new TimerTask() {
+        TimerTask stabilizeTask = new TimerTask() {
             @Override
             public void run() {
                 stabilize();
             }
         };
 
-
-
         //Set a random day so that the stabalizers don't run at the same time
-        int interval = 500;
-        int delay = Helper.getHelper().getRandom(10, interval);
+        int interval = 100;
+        int delay = Helper.getHelper().getRandom(0, interval);
 
         stabilizeTimer = new Timer();
-        stabilizeTimer.scheduleAtFixedRate(task, delay, interval);
+        stabilizeTimer.scheduleAtFixedRate(stabilizeTask, delay, interval);
 
-        /*
-            TimerTask fingers = new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    //updateFingerTable();
-                }
-            };
-            */
+        TimerTask fingers = new TimerTask() {
+            @Override
+            public void run() {
+                updateFingerTable();
+            }
+        };
 
+        // Set a random day so that the stabalizers don't run at the same time
+        int interval2 = 10000;
+        int delay2 = Helper.getHelper().getRandom(10, interval2);
 
-            // Set a random day so that the stabalizers don't run at the same time
-            // int interval2 = 3000;
-            // int delay2 = Helper.getHelper().getRandom(10, interval);
+        fingerTimer = new Timer();
 
-            //Timer fingerTimer = new Timer();
-            //fingerTimer.scheduleAtFixedRate(fingers, delay2, interval2);
-
+        fingerTimer.scheduleAtFixedRate(fingers, delay2, interval2);
     }
 
     public void shutdown() {
         stabilizeTimer.cancel();
         stabilizeTimer.purge();
+        fingerTimer.cancel();
+        fingerTimer.purge();
     }
 
     private void updateFingerTable() {
-        JSONObject message = new JSONObject(fingers.createFingerProbeMessage());
-        Client c = null;
-        try {
-            c = new Client(successor.getAsSocket(), message.toString(), null);
-            c.start();
-        } catch (IOException e) {
-            handleUnresponsiveSuccessorNode(successor);
+        if(!successor.getId().equals(self.getId()) && predecessor != null &&
+                !predecessor.getId().equals(self.getId())){
+
+            JSONObject message = new JSONObject(fingers.createFingerProbeMessage());
+            Client c = null;
+            try {
+                c = new Client(successor.getAsSocket(), message.toString(), null);
+                c.start();
+            } catch (IOException e) {
+                handleUnresponsiveSuccessorNode(successor);
+            }
         }
 
     }

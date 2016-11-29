@@ -7,12 +7,11 @@ import se.kth.networking.java.first.network.ClientAcceptor;
 import se.kth.networking.java.first.ring.RingHandler;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
  * Created by Nick on 11/2/2016.
@@ -164,16 +163,16 @@ public class Server {
         Server server2 = new Server(app, 6060);
         server2.start();
 
-        Thread.sleep(3000);
+        Thread.sleep(200);
 
         Server server3 = new Server(app, 7070);
         server3.start();
 
         //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
         server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-        Thread.sleep(3000);
+        Thread.sleep(200);
         server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-        Thread.sleep(3000);
+        Thread.sleep(200);
 
         server2.addKey(new BigInteger("22"), "gravy");
         server2.addKey(new BigInteger("55"), "stuff");
@@ -184,14 +183,25 @@ public class Server {
 
         server3.probe();
 
-//        for (int i = 0; i < 3; i++) {
-//            Server s = new Server(app);
-//            s.start();
-//            s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-//        }
+        List<Server> servers = new ArrayList<>();
+        servers.add(server1);
+        servers.add(server2);
+        servers.add(server3);
 
-        Thread.sleep(10000);
-        server1.stop();
+
+        for (int i = 0; i < 10; i++) {
+            Server s = new Server(app);
+            servers.add(s);
+            s.start();
+            Thread.sleep(200);
+            System.out.println("Started: " + i);
+
+            Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
+            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
+        }
+
+        Thread.sleep(200);
+        //server1.stop();
 
 //        server3.probe();
        // Thread.sleep(10000);
@@ -213,7 +223,7 @@ public class Server {
         int delay = Helper.getHelper().getRandom(10, interval);
 
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(task, delay, interval);
+        timer.scheduleAtFixedRate(task, 0, interval);
 
     }
 

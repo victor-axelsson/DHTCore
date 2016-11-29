@@ -42,8 +42,12 @@ public class Client {
         writer.write(payload + ENDLINE);
         writer.flush();
 
-        socket.setSoTimeout(2000);
+        socket.setSoTimeout(30000);
         String reply = reader.readLine();
+
+        if(reply == null){
+            System.err.println(payload);
+        }
 
         //The server always listens on the same port, so we can use the socket for this purpose
         String ip=(((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/","");
