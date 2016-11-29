@@ -28,12 +28,13 @@ public class RingHandler {
     FingerTable fingers;
     Node self;
     ApplicationDomain app;
+    Timer stabilizeTimer;
 
     public RingHandler(String ip, int port, ApplicationDomain app) {
         this.self = new Node(ip, port);
         this.successor = this.self;
         this.app = app;
-        this.fingers = new FingerTable(self, this);
+        //this.fingers = new FingerTable(self, this);
 
         TimerTask task = new TimerTask() {
             @Override
@@ -42,12 +43,16 @@ public class RingHandler {
             }
         };
 
+
+
         //Set a random day so that the stabalizers don't run at the same time
         int interval = 500;
         int delay = Helper.getHelper().getRandom(10, interval);
 
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(task, delay, interval);
+        stabilizeTimer = new Timer();
+        stabilizeTimer.scheduleAtFixedRate(task, delay, interval);
+
+        /*
             TimerTask fingers = new TimerTask() {
                 @Override
                 public void run() {
@@ -56,17 +61,24 @@ public class RingHandler {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    updateFingerTable();
+                    //updateFingerTable();
                 }
             };
+            */
 
-            //Set a random day so that the stabalizers don't run at the same time
-            int interval2 = 3000;
-            int delay2 = Helper.getHelper().getRandom(10, interval);
 
-            Timer timer2 = new Timer();
-            timer2.scheduleAtFixedRate(fingers, delay2, interval2);
+            // Set a random day so that the stabalizers don't run at the same time
+            // int interval2 = 3000;
+            // int delay2 = Helper.getHelper().getRandom(10, interval);
 
+            //Timer fingerTimer = new Timer();
+            //fingerTimer.scheduleAtFixedRate(fingers, delay2, interval2);
+
+    }
+
+    public void shutdown() {
+        stabilizeTimer.cancel();
+        stabilizeTimer.purge();
     }
 
     private void updateFingerTable() {
@@ -76,7 +88,7 @@ public class RingHandler {
             c = new Client(successor.getAsSocket(), message.toString(), null);
             c.start();
         } catch (IOException e) {
-            handleUnresponsiveSuccessorNode();
+            handleUnresponsiveSuccessorNode(successor);
         }
 
     }
@@ -95,7 +107,6 @@ public class RingHandler {
 
                     JSONObject jsonResponse = new JSONObject(response);
 
-                    String[] args = response.split(";");
                     Node otherPredesessor = null;
                     Node otherSuccessor = null;
 
@@ -113,7 +124,8 @@ public class RingHandler {
             });
             c.start();
         } catch (IOException e) {
-            handleUnresponsiveSuccessorNode();
+            System.out.println("Caught exception in stabilize");
+            handleUnresponsiveSuccessorNode(successor);
         }
     }
 
@@ -140,23 +152,50 @@ public class RingHandler {
     public void onStabilizeRequest(Node otherPredesesor, Node otherSuccessor) {
 
         if (otherPredesesor == null) {
+
             // It have no predecessor, notify our successor that its predecessor might be us
-            sendNotify(successor.getIp(), successor.getPort());
+            try {
+                sendNotify(successor.getIp(), successor.getPort());
+            } catch (IOException e) {
+                handleUnresponsiveSuccessorNode(successor);
+            }
 
         } else if (Objects.equals(otherPredesesor.getId(), self.getId())) {
             //All is well, its us.
 
         } else if (Objects.equals(otherPredesesor.getId(), successor.getId())) {
             //The successors predesessor is itself, we should probably be there instead
-            sendNotify(successor.getIp(), successor.getPort());
+            try {
+                sendNotify(successor.getIp(), successor.getPort());
+            } catch (IOException e) {
+                handleUnresponsiveSuccessorNode(successor);
+            }
 
         } else {
             if (between(otherPredesesor.getId(), self.getId(), successor.getId())) {
+
+
+
                 // we probably hve the wrong successor
-                sendNotify(otherPredesesor.getIp(), otherPredesesor.getPort());
+                try {
+                    sendNotify(otherPredesesor.getIp(), otherPredesesor.getPort());
+
+                    nextSuccessor = successor;
+
+                    if(otherPredesesor == null){
+                        System.out.println("Was null");
+                    }
+                    successor = otherPredesesor;
+                } catch (IOException e) {
+
+                }
             } else {
                 //we should be in between the successor and its predecessor
-                sendNotify(successor.getIp(), successor.getPort());
+                try {
+                    sendNotify(successor.getIp(), successor.getPort());
+                } catch (IOException e) {
+                    handleUnresponsiveSuccessorNode(successor);
+                }
             }
         }
     }
@@ -169,12 +208,15 @@ public class RingHandler {
             nodes.put(new JSONObject(self.toString()));
             message.put("nodes", nodes);
 
+
             // String msg = "probe:" + self.getIp() + "," + self.getPort() + "," + self.toString();
+            System.out.println(successor);
             Client c = new Client(successor.getAsSocket(), message.toString(), null);
             c.start();
+
         } catch (IOException e) { //if exception -> node died
-            handleUnresponsiveSuccessorNode();
-            if (successor != null && nextSuccessor != null) probe(); // todo drop probe?
+            System.out.println("Caught exception in probe");
+            handleUnresponsiveSuccessorNode(successor);
         }
     }
 
@@ -194,13 +236,14 @@ public class RingHandler {
                 Client c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
-                handleUnresponsiveSuccessorNode();
+                System.out.println("Caught exception in handleprobe");
+                handleUnresponsiveSuccessorNode(successor);
             }
         }
     }
 
-    public void sendNotify(String rIp, int rPort) {
-        try {
+    public void sendNotify(String rIp, int rPort) throws IOException {
+
 
             JSONObject message = new JSONObject();
             message.put("ip", self.getIp());
@@ -222,17 +265,18 @@ public class RingHandler {
                         // Now what? I think this will be fixed with stabilization
                         successor = node;
                     }
+
+
                     updateNextSuccessor();
                     if (predecessor != null)
                         notifyPredecessorOfNewSuccessor();
+
 
                     return null;
                 }
             });
             s.start();
-        } catch (IOException e) {
-            System.out.println(rIp + ":" + rPort + " was unresponsive"); //todo do we need to do anything else?
-        }
+
     }
 
     private void notifyPredecessorOfNewSuccessor() {
@@ -270,7 +314,7 @@ public class RingHandler {
             });
             s.start();
         } catch (IOException e) {
-            handleUnresponsiveSuccessorNode();
+            handleUnresponsiveSuccessorNode(successor);
         }
 
     }
@@ -321,7 +365,7 @@ public class RingHandler {
                 c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
-                handleUnresponsiveSuccessorNode();
+                handleUnresponsiveSuccessorNode(successor);
             }
         }
     }
@@ -340,13 +384,12 @@ public class RingHandler {
             message.put("key", key);
             message.put("value", value);
 
-            //String msg = "lookup_response:" + self.getIp() + "," + self.getPort() + "," + key + "," + value;
             Client c = null;
             try {
                 c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
-                handleUnresponsiveSuccessorNode();
+                handleUnresponsiveSuccessorNode(successor);
             }
 
         } else {
@@ -355,13 +398,12 @@ public class RingHandler {
             message.put("key", key);
             message.put("asker", new JSONObject(asker.toString()));
 
-            //String msg = "lookup:" + self.getIp() + "," + self.getPort() + "," + key + "," + asker.toString();
             Client c = null;
             try {
                 c = new Client(successor.getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
-                handleUnresponsiveSuccessorNode();
+                handleUnresponsiveSuccessorNode(successor);
             }
         }
     }
@@ -422,19 +464,52 @@ public class RingHandler {
             c = new Client(successor.getAsSocket(), message, null);
             c.start();
         } catch (IOException e) {
-            handleUnresponsiveSuccessorNode();
+            handleUnresponsiveSuccessorNode(successor);
         }
-
     }
 
-    private void handleUnresponsiveSuccessorNode() {
-        System.out.println(successor.toString() + " is not responding to " + self.toString());
-        if (nextSuccessor != null) {
-            successor = nextSuccessor;
-            nextSuccessor = null;
-            updateNextSuccessor();
-        } else {
-            successor = self; //TODO drop probe?
+    private synchronized void handleUnresponsiveSuccessorNode(Node unresponsive) {
+
+        boolean isRepsonsive = false;
+        try {
+            successor.getAsSocket();
+            isRepsonsive = true;
+        } catch (IOException e) {
+            isRepsonsive = false;
+        }
+
+        if(!isRepsonsive){
+            System.out.println(successor.toString() + " is not responding to " + self.toString());
+            if (nextSuccessor != null) {
+
+                unlinkPredecessor(nextSuccessor, successor);
+
+                if(nextSuccessor == null){
+                    System.out.println("was null");
+                }
+                successor = nextSuccessor;
+                nextSuccessor = null;
+                //updateNextSuccessor();
+            } else {
+                successor = self; //TODO drop probe?
+            }
+        }
+    }
+
+    private void unlinkPredecessor(Node nextSuccessor, Node successor) {
+
+        JSONObject message = new JSONObject();
+        message.put("ip", self.getIp());
+        message.put("port", self.getPort());
+        message.put("type", "unlink_predecessor");
+        message.put("predecessor", successor);
+
+        Client c = null;
+        try {
+            c = new Client(nextSuccessor.getAsSocket(), message.toString(), null);
+            c.start();
+        } catch (IOException e) {
+            System.out.println("Well, fuck. We are linked out. Find some node in the finger table and stabilize");
         }
     }
 
@@ -443,7 +518,16 @@ public class RingHandler {
         predecessor = self;
     }
 
-    public void fingerProbeResponse(String clientMessage, Node node) {
+    public  void fingerProbeResponse(String clientMessage, Node node) {
         fingers.updateTable(clientMessage);
     }
+
+    public  void unlinkPredecessor(String clientMessage) {
+        System.out.println("Unlinking");
+        JSONObject message = new JSONObject(clientMessage);
+        Node newPredecessor = new Node(message.getString("ip"), message.getInt("port"));
+        predecessor = newPredecessor;
+    }
+
+
 }

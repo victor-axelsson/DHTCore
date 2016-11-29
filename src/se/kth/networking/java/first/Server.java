@@ -65,7 +65,13 @@ public class Server {
 
     private String handleMessage(String clientMessage, Node node){
 
-        JSONObject message = new JSONObject(clientMessage);
+        JSONObject message = null;
+        try{
+            message = new JSONObject(clientMessage);
+        }catch(Exception e){
+            System.out.println("Client message: " + clientMessage);
+            return null;
+        }
 
         String response = "Bad request";
         if(isValidMessage(clientMessage)){
@@ -95,6 +101,9 @@ public class Server {
                 case "successorChanged":
                     ringHandler.updateNextSuccessor();
                     break;
+                case "unlink_predecessor":
+                    ringHandler.unlinkPredecessor(clientMessage);
+                    break;
                 case "add":
                     String payload = message.getString("value");
                     BigInteger key = message.getBigInteger("key");
@@ -116,7 +125,11 @@ public class Server {
     }
 
     public void sendNotify(String ip, int port){
-        ringHandler.sendNotify(ip, port);
+        try {
+            ringHandler.sendNotify(ip, port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void probe(){
@@ -124,10 +137,6 @@ public class Server {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-       // int port = Integer.valueOf(args[0]);
-
-
-
         ApplicationDomain app = new ApplicationDomain() {
 
             HashMap<BigInteger, String> store = new HashMap<>();
@@ -182,10 +191,10 @@ public class Server {
 //        }
 
         Thread.sleep(10000);
-        server1.probe();
         server1.stop();
+
 //        server3.probe();
-        Thread.sleep(10000);
+       // Thread.sleep(10000);
         System.out.println("done");
 
         TimerTask task = new TimerTask() {
@@ -200,7 +209,7 @@ public class Server {
         };
 
         //Set a random day so that the stabalizers don't run at the same time
-        int interval = 500;
+        int interval = 2000;
         int delay = Helper.getHelper().getRandom(10, interval);
 
         Timer timer = new Timer();
@@ -214,6 +223,7 @@ public class Server {
 
     private void stop() {
         acceptor.shutdown();
+        ringHandler.shutdown();
     }
 
     public RingHandler getRingHandler() {

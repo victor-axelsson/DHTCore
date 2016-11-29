@@ -32,8 +32,6 @@ public class Client {
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
             handleClient(reader, writer);
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             if (writer != null) writer.close();
             if (reader != null) reader.close();
@@ -43,6 +41,8 @@ public class Client {
     private void handleClient(BufferedReader reader, PrintWriter writer) throws IOException {
         writer.write(payload + ENDLINE);
         writer.flush();
+
+        socket.setSoTimeout(2000);
         String reply = reader.readLine();
 
         //The server always listens on the same port, so we can use the socket for this purpose

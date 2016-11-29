@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by victoraxelsson on 2016-11-06.
@@ -48,6 +49,20 @@ public class ClientAcceptor extends Thread{
     }
 
     public void shutdown() {
+
+        executorService.shutdownNow();
+        try {
+            this.serverSocket.close();
+            if (!executorService.awaitTermination(500, TimeUnit.MILLISECONDS))
+                System.err.println("Pool did not terminate");
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /*
         try {
             this.executorService.shutdown();
             this.serverSocket.close();
@@ -55,5 +70,6 @@ public class ClientAcceptor extends Thread{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        */
     }
 }
