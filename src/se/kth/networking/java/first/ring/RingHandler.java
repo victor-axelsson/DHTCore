@@ -397,12 +397,30 @@ public class RingHandler {
 
             Client c = null;
             try {
-                c = new Client(successor.getAsSocket(), message.toString(), null);
+                c = new Client(lookupHelper(key).getAsSocket(), message.toString(), null);
                 c.start();
             } catch (IOException e) {
                 handleUnresponsiveSuccessorNode(successor);
             }
         }
+    }
+
+    private Node lookupHelper(BigInteger id) {
+        if (fingers.getTable() == null) return successor;
+
+        for (int i = fingers.getTable().size() - 1; i >= 0; i--) {
+            Node current = fingers.getTable().get(i);
+            Node previous = null;
+            if (i == fingers.getTable().size() - 1) {
+                previous = fingers.getTable().get(0);
+            } else {
+                previous = fingers.getTable().get(i + 1);
+            }
+
+            if (between(id, previous.getId(), current.getId()))
+                return current;
+        }
+        return successor; // never
     }
 
     public void lookup(String message) {

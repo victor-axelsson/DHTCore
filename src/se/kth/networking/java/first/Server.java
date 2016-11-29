@@ -184,17 +184,19 @@ public class Server {
         server3.probe();
 
         List<Server> servers = new ArrayList<>();
-        servers.add(server1);
-        servers.add(server2);
-        servers.add(server3);
+//        servers.add(server1);
+//        servers.add(server2);
+//        servers.add(server3);
 
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 3; i++) {
             Server s = new Server(app);
             servers.add(s);
             s.start();
             Thread.sleep(200);
             System.out.println("Started: " + i);
+            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
+
 
             Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
             s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
@@ -212,6 +214,13 @@ public class Server {
             public void run() {
                 System.out.println("run probe");
                 server3.probe();
+
+
+                System.out.println("do lookup");
+                for (Server s : servers) {
+                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
+                }
+
 //                Server s = new Server(app);
 //                s.start();
 //                s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());

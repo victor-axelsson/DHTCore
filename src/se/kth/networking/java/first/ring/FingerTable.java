@@ -82,6 +82,10 @@ public class FingerTable {
             table.add(new Node(fingers.get(i).toString()));
         }
 
-        //System.out.println("Table is " + table);
+        System.out.println("Table is " + table);
+    }
+
+    public List<Node> getTable() {
+        return table;
     }
 }
