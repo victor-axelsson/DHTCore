@@ -64,7 +64,7 @@ public class FingerTable {
         jsonMessage.remove("keys");
         jsonMessage.put("keys", notFoundKeys);
 
-        if(notFoundKeys.isEmpty()){
+        if(notFoundKeys.isEmpty() || jsonMessage.getString("ip").equals(self.getIp()) && jsonMessage.getInt("port") == self.getPort()){
             Node sender = new Node(jsonMessage.toString());
             jsonMessage.put("type", "finger_probe_response");
             onDone.onResponse(jsonMessage.toString(), sender);
