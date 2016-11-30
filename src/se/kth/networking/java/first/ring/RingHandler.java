@@ -358,6 +358,7 @@ public class RingHandler {
     }
 
     private void sendKeyToSuccessor(BigInteger key, String value) {
+        //System.out.println(self.getId() + " sendKeyToSuccessor " + key + ":" + value); //debug stored
         JSONObject message = new JSONObject();
         message.put("ip", self.getIp());
         message.put("port", self.getPort());
@@ -372,6 +373,7 @@ public class RingHandler {
             c.start();
         } catch (IOException e) {
             handleUnresponsiveSuccessorNode(successor);
+            sendKeyToSuccessor(key, value); //retry
         }
     }
 
