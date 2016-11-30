@@ -155,6 +155,11 @@ public class Server {
             public void foundKey(BigInteger key, String value) {
                 System.out.println("Key:" + key + ", Value: " + value);
             }
+
+            @Override
+            public Map<BigInteger, String> getStore() {
+                return store;
+            }
         };
 
         Server server1 = new Server(app, 5050);
@@ -189,21 +194,21 @@ public class Server {
 //        servers.add(server3);
 
 
-        for (int i = 0; i < 3; i++) {
-            Server s = new Server(app);
-            servers.add(s);
-            s.start();
-            Thread.sleep(200);
-            System.out.println("Started: " + i);
-            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
-
-
-            Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
-            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
-        }
+//        for (int i = 0; i < 3; i++) {
+//            Server s = new Server(app);
+//            servers.add(s);
+//            s.start();
+//            Thread.sleep(200);
+//            System.out.println("Started: " + i);
+//            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
+//
+//
+//            Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
+//            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
+//        }
 
         Thread.sleep(200);
-        //server1.stop();
+        server2.stop();
 
 //        server3.probe();
        // Thread.sleep(10000);
@@ -217,9 +222,12 @@ public class Server {
 
 
                 System.out.println("do lookup");
-                for (Server s : servers) {
-                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
-                }
+
+                server1.lookup(new BigInteger("55"));
+                server1.lookup(new BigInteger("22"));
+//                for (Server s : servers) {
+//                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
+//                }
 
 //                Server s = new Server(app);
 //                s.start();

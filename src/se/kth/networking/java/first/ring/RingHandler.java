@@ -12,10 +12,7 @@ import se.kth.networking.java.first.network.Client;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
  * Created by victoraxelsson on 2016-11-04.
@@ -72,6 +69,13 @@ public class RingHandler {
         stabilizeTimer.purge();
         fingerTimer.cancel();
         fingerTimer.purge();
+        transferStoredData();
+    }
+
+    private void transferStoredData() {
+        for (Map.Entry<BigInteger, String> entry : app.getStore().entrySet()) {
+            sendKeyToSuccessor(entry.getKey(), entry.getValue());
+        }
     }
 
     private void updateFingerTable() {
@@ -346,24 +350,28 @@ public class RingHandler {
 
     public void addKey(BigInteger key, String value) {
         if (between(key, predecessor.getId(), self.getId())) {
+            //System.out.println(self.getId() + " stored " + key + ":" + value); //debug stored
             app.storeKey(key, value);
         } else {
+            sendKeyToSuccessor(key, value);
+        }
+    }
 
-            JSONObject message = new JSONObject();
-            message.put("ip", self.getIp());
-            message.put("port", self.getPort());
-            message.put("type", "add");
-            message.put("key", key);
-            message.put("value", value);
+    private void sendKeyToSuccessor(BigInteger key, String value) {
+        JSONObject message = new JSONObject();
+        message.put("ip", self.getIp());
+        message.put("port", self.getPort());
+        message.put("type", "add");
+        message.put("key", key);
+        message.put("value", value);
 
-            //String msg = "add:" + self.getIp() + "," + self.getPort() + "," + key + "," + value;
-            Client c = null;
-            try {
-                c = new Client(successor.getAsSocket(), message.toString(), null);
-                c.start();
-            } catch (IOException e) {
-                handleUnresponsiveSuccessorNode(successor);
-            }
+        //String msg = "add:" + self.getIp() + "," + self.getPort() + "," + key + "," + value;
+        Client c = null;
+        try {
+            c = new Client(successor.getAsSocket(), message.toString(), null);
+            c.start();
+        } catch (IOException e) {
+            handleUnresponsiveSuccessorNode(successor);
         }
     }
 
