@@ -23,11 +23,15 @@ public class Server {
     private ApplicationDomain app;
 
 
-    public Server(ApplicationDomain app, int port) {
+    public Server(ApplicationDomain app, String ip, int port) {
         this.app = app;
+        //Default to localhost
+        if(ip == null){
+            ip = "127.0.0.1";
+        }
 
         //Please fix dynamic ip
-        ringHandler = new RingHandler("127.0.0.1", port, app);
+        ringHandler = new RingHandler(ip, port, app);
 
         try {
             acceptor = new ClientAcceptor(port, new OnResponse<String>(){
@@ -42,7 +46,11 @@ public class Server {
     }
 
     public Server(ApplicationDomain app) {
-        this(app, selectAFreePort());
+        this(app, null, selectAFreePort());
+    }
+
+    public Server(ApplicationDomain app, String ip) {
+        this(app, ip, selectAFreePort());
     }
 
     private static int selectAFreePort(){
@@ -64,6 +72,8 @@ public class Server {
 
     private String handleMessage(String clientMessage, Node node){
 
+        System.out.println("RECEIVED: " + clientMessage + " \nSELF:" + getRingHandler().getSelf().getPort());
+       // System.out.println("SELF: " + ringHandler.getSelf());
         JSONObject message = null;
         try{
             message = new JSONObject(clientMessage);
@@ -162,15 +172,18 @@ public class Server {
             }
         };
 
-        Server server1 = new Server(app, 5050);
+
+        //Server server1 = new Server(app, "130.229.146.35", 5050);
+        Server server1 = new Server(app, null, 5050);
         server1.start();
 
-        Server server2 = new Server(app, 6060);
+
+        Server server2 = new Server(app, null, 6060);
         server2.start();
 
         Thread.sleep(200);
 
-        Server server3 = new Server(app, 7070);
+        Server server3 = new Server(app, null, 7070);
         server3.start();
 
         //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
@@ -182,49 +195,48 @@ public class Server {
         server2.addKey(new BigInteger("22"), "gravy");
         server2.addKey(new BigInteger("55"), "stuff");
 
-        //Thread.sleep(3000);
+        Thread.sleep(3000);
+       // server2.stop();
 
         server2.lookup(new BigInteger("55"));
-
         server3.probe();
 
         List<Server> servers = new ArrayList<>();
-//        servers.add(server1);
-//        servers.add(server2);
-//        servers.add(server3);
+        servers.add(server1);
+        servers.add(server2);
+        servers.add(server3);
+
+        /*
+        for (int i = 0; i < 3; i++) {
+            Server s = new Server(app);
+            servers.add(s);
+            s.start();
+            Thread.sleep(200);
+            System.out.println("Started: " + i);
+            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
 
 
-//        for (int i = 0; i < 3; i++) {
-//            Server s = new Server(app);
-//            servers.add(s);
-//            s.start();
-//            Thread.sleep(200);
-//            System.out.println("Started: " + i);
-//            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
-//
-//
-//            Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
-//            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
-//        }
+            Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
+            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
+        }
 
         Thread.sleep(200);
-        server2.stop();
+        //server2.stop();
 
 //        server3.probe();
        // Thread.sleep(10000);
         System.out.println("done");
+*/
 
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 System.out.println("run probe");
-                server3.probe();
-
-
+                //server3.probe();
                 System.out.println("do lookup");
 
-                server1.lookup(new BigInteger("55"));
-                server1.lookup(new BigInteger("22"));
+                //server1.lookup(new BigInteger("55"));
+                //server1.lookup(new BigInteger("22"));
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }
@@ -235,12 +247,18 @@ public class Server {
             }
         };
 
-        //Set a random day so that the stabalizers don't run at the same time
-        int interval = 2000;
-        int delay = Helper.getHelper().getRandom(10, interval);
+        /*
 
+        server2.stop();
+
+        //Set a random day so that the stabalizers don't run at the same time
+
+        */
+        int interval = 2000;
+        //int delay = Helper.getHelper().getRandom(10, interval);
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(task, 0, interval);
+
 
     }
 

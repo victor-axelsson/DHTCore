@@ -44,6 +44,8 @@ public class ClientAcceptor extends Thread{
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 running = false;
+            }finally {
+
             }
         }
     }
