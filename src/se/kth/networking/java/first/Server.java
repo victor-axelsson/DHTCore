@@ -37,6 +37,7 @@ public class Server {
             acceptor = new ClientAcceptor(port, new OnResponse<String>(){
                 @Override
                 public String onResponse(String response, Node node) {
+                    System.out.println("Received request");
                     return handleMessage(response, node);
                 }
             });
@@ -72,6 +73,8 @@ public class Server {
 
     private String handleMessage(String clientMessage, Node node){
 
+        String response = "Bad request";
+
         System.out.println("RECEIVED: " + clientMessage + " \nSELF:" + getRingHandler().getSelf().getPort());
        // System.out.println("SELF: " + ringHandler.getSelf());
         JSONObject message = null;
@@ -79,10 +82,9 @@ public class Server {
             message = new JSONObject(clientMessage);
         }catch(Exception e){
             System.out.println("Client message: " + clientMessage);
-            return null;
+            return response;
         }
 
-        String response = "Bad request";
         if(isValidMessage(clientMessage)){
             switch (message.getString("type")){
                 case "notify":
@@ -193,7 +195,7 @@ public class Server {
         Thread.sleep(200);
 
         server2.addKey(new BigInteger("22"), "gravy");
-        server2.addKey(new BigInteger("55"), "stuff");
+        //server2.addKey(new BigInteger("55"), "stuff");
 
         Thread.sleep(3000);
        // server2.stop();

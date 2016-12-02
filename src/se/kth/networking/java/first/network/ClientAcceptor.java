@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,7 +27,8 @@ public class ClientAcceptor extends Thread{
 
 
     private void handleClient(Socket client) throws InterruptedException {
-        executorService.execute(new ClientSocketHandler(client, onResponse));
+        System.out.println("Count: " + ((ThreadPoolExecutor) executorService).getActiveCount());
+        executorService.submit(new ClientSocketHandler(client, onResponse));
     }
 
     @Override
@@ -36,6 +38,7 @@ public class ClientAcceptor extends Thread{
             Socket client = null;
             try {
                 client = serverSocket.accept();
+                System.out.println("Client acceptor accepting");
                 handleClient(client);
             } catch (IOException e) {
                 System.out.println("Socket was closed in ClientAcceptor, stop execution of the node " +
@@ -51,7 +54,6 @@ public class ClientAcceptor extends Thread{
     }
 
     public void shutdown() {
-
         executorService.shutdownNow();
         try {
             this.serverSocket.close();
@@ -63,15 +65,5 @@ public class ClientAcceptor extends Thread{
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        /*
-        try {
-            this.executorService.shutdown();
-            this.serverSocket.close();
-            this.interrupt();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
     }
 }

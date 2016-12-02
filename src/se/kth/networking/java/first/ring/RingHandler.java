@@ -34,8 +34,6 @@ public class RingHandler {
         this.fingers = new FingerTable(self, this);
         socketQueue = new SocketQueue();
 
-        //stabilize();
-
         TimerTask stabilizeTask = new TimerTask() {
             @Override
             public void run() {
@@ -45,7 +43,7 @@ public class RingHandler {
 
         //Set a random day so that the stabalizers don't run at the same time
         int interval = 2000;
-        int delay = Helper.getHelper().getRandom(0, interval);
+        int delay = Helper.getHelper().getRandom(200, interval);
 
         stabilizeTimer = new Timer();
         stabilizeTimer.scheduleAtFixedRate(stabilizeTask, delay, interval);
@@ -348,16 +346,18 @@ public class RingHandler {
     }
 
     public void addKey(BigInteger key, String value) {
-        if (predecessor != null && between(key, predecessor.getId(), self.getId())) {
+
+        if (predecessor == null || between(key,  predecessor.getId(), self.getId())) {
             //System.out.println(self.getId() + " stored " + key + ":" + value); //debug stored
             app.storeKey(key, value);
         } else {
+
+            System.out.println("Was not null" + predecessor);
             sendKeyToSuccessor(key, value);
         }
     }
 
     private void sendKeyToSuccessor(BigInteger key, String value) {
-        //System.out.println(self.getId() + " sendKeyToSuccessor " + key + ":" + value); //debug stored
         JSONObject message = new JSONObject();
         message.put("ip", self.getIp());
         message.put("port", self.getPort());
@@ -379,7 +379,7 @@ public class RingHandler {
         message.put("ip", self.getIp());
         message.put("port", self.getPort());
 
-        if (between(key, predecessor.getId(), self.getId())) {
+        if (predecessor == null || between(key, predecessor.getId(), self.getId())) {
             //do the lookup on this node
             String value = app.getKey(key);
 
@@ -489,6 +489,8 @@ public class RingHandler {
         } catch (IOException e) {
             isRepsonsive = false;
         }
+
+        System.out.println("Was responsive:" + isRepsonsive);
 
         if(!isRepsonsive){
             System.out.println(successor.toString() + " is not responding to " + self.toString());

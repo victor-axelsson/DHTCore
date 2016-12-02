@@ -12,7 +12,6 @@ import java.net.Socket;
  */
 public class ClientSocketHandler implements Runnable {
     private Socket client;
-    private static String END = "End";
     private OnResponse<String> onResponse;
 
     public ClientSocketHandler(Socket client, OnResponse<String> onResponse) {
@@ -34,6 +33,7 @@ public class ClientSocketHandler implements Runnable {
             if (writer != null) writer.close();
             if (reader != null) try {
                 reader.close();
+                client.close();
             } catch (IOException e) {
                 System.err.println(e.getCause() + " " + e.getMessage());
             }
@@ -41,6 +41,7 @@ public class ClientSocketHandler implements Runnable {
     }
 
     private String deliverMessage(String msg){
+        System.out.println("CLickent socket reccived: " + msg);
         JSONObject obj = new JSONObject(msg);
         Node n = new Node(msg);
         return  onResponse.onResponse(obj.toString(), n);
@@ -50,7 +51,7 @@ public class ClientSocketHandler implements Runnable {
         //Read the message
         String str;
         try {
-            while ((str = reader.readLine()) != null && !END.equalsIgnoreCase(str)) {
+            while ((str = reader.readLine()) != null) {
                 String res = deliverMessage(str);
                 writer.write(res + "\n");
                 writer.flush();

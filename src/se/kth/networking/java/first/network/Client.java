@@ -13,7 +13,6 @@ import java.net.Socket;
 public class Client {
     private Socket socket;
     private static String ENDLINE = "\n";
-    private static String END = "End";
     private String payload;
     private OnResponse<String> onResponse;
 

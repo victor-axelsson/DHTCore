@@ -21,12 +21,7 @@ public class SocketQueue {
     }
 
 
-    public synchronized void sendMessage(Node node, String message, OnResponse onResponse) throws IOException{
-        /*
-        Message message1 = new Message(node, message, onResponse, new Client(node.getAsSocket(), message, onResponse););
-        messages.add(message1);
-        */
-
+    public void sendMessage(Node node, String message, OnResponse onResponse) throws IOException{
         System.out.println("----");
         System.out.println("MSG: " + message);
         System.out.println("TO:" + node.getPort());
