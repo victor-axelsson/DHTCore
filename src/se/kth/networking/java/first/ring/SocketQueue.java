@@ -14,12 +14,10 @@ import java.util.List;
  */
 public class SocketQueue {
 
-    List<Message> messages;
 
     public SocketQueue(){
-        messages = new ArrayList<>();
-    }
 
+    }
 
     public void sendMessage(Node node, String message, OnResponse onResponse) throws IOException{
         System.out.println("----");

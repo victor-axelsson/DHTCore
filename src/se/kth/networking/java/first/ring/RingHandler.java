@@ -163,9 +163,8 @@ public class RingHandler {
                 handleUnresponsiveSuccessorNode(successor);
             }
 
-        } else if (Objects.equals(otherPredesesor.getId(), self.getId())) {
-            //All is well, its us.
-
+        } else if(Objects.equals(otherPredesesor.getId(), self.getId())) {
+            //stuff
         } else if (Objects.equals(otherPredesesor.getId(), successor.getId())) {
             //The successors predesessor is itself, we should probably be there instead
             try {
@@ -174,12 +173,10 @@ public class RingHandler {
                 handleUnresponsiveSuccessorNode(successor);
             }
 
-        } else {
+        } else{
             if (between(otherPredesesor.getId(), self.getId(), successor.getId())) {
 
-
-
-                // we probably hve the wrong successor
+                // we probably have the wrong successor
                 try {
                     sendNotify(otherPredesesor.getIp(), otherPredesesor.getPort());
 
@@ -190,7 +187,7 @@ public class RingHandler {
                     }
                     successor = otherPredesesor;
                 } catch (IOException e) {
-
+                    e.printStackTrace();
                 }
             } else {
                 //we should be in between the successor and its predecessor
@@ -211,8 +208,6 @@ public class RingHandler {
             nodes.put(new JSONObject(self.toString()));
             message.put("nodes", nodes);
 
-
-            // String msg = "probe:" + self.getIp() + "," + self.getPort() + "," + self.toString();
             System.out.println(successor);
 
             socketQueue.sendMessage(successor, message.toString(), null );
@@ -243,14 +238,15 @@ public class RingHandler {
     }
 
     public void sendNotify(String rIp, int rPort) throws IOException {
-
-
             JSONObject message = new JSONObject();
             message.put("ip", self.getIp());
             message.put("port", self.getPort());
             message.put("type", "notify");
 
-            //String msg = "notify:" + ip + "," + port;
+        System.out.println("---");
+        System.out.println(rIp + ":" + rPort);
+        System.out.println(message);
+        System.out.println("---");
 
             socketQueue.sendMessage(new Node(rIp, rPort), message.toString(), new OnResponse<String>() {
                 @Override
@@ -261,10 +257,20 @@ public class RingHandler {
 
                     if (status.equalsIgnoreCase("accept")) {
                         successor = node;
-                    } else {
+                    }
+                    /*
+                    else{
+                        Node betterSuccessor = new Node(jsonResonse.optJSONObject("better_successor").toString());
+                        successor = betterSuccessor;
+                    }
+                    */
+
+                    /*
+                    else {
                         // Now what? I think this will be fixed with stabilization
                         successor = node;
                     }
+                    */
 
 
                     updateNextSuccessor();
@@ -340,6 +346,8 @@ public class RingHandler {
                 return response.toString();
             } else {
                 response.put("status", "deny");
+                response.put("better_successor", new JSONObject(predecessor.toString()));
+
                 return response.toString();
             }
         }

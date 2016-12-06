@@ -176,9 +176,20 @@ public class Server {
 
 
         //Server server1 = new Server(app, "130.229.146.35", 5050);
-        Server server1 = new Server(app, null, 5050);
+        Server server1 = new Server(app, "192.168.0.3", 5050);
         server1.start();
 
+        /*
+        //Server server1 = new Server(app, "130.229.146.35", 5050);
+        Server server2 = new Server(app, "192.168.0.3", 6060);
+        server2.start();
+
+        Thread.sleep(2000);
+        server2.sendNotify("192.168.0.3", 5050);
+        */
+
+
+        /*
 
         Server server2 = new Server(app, null, 6060);
         server2.start();
@@ -208,7 +219,7 @@ public class Server {
         servers.add(server2);
         servers.add(server3);
 
-        /*
+
         for (int i = 0; i < 3; i++) {
             Server s = new Server(app);
             servers.add(s);
@@ -228,7 +239,7 @@ public class Server {
 //        server3.probe();
        // Thread.sleep(10000);
         System.out.println("done");
-*/
+
 
         TimerTask task = new TimerTask() {
             @Override
@@ -249,26 +260,26 @@ public class Server {
             }
         };
 
-        /*
+
 
         server2.stop();
 
         //Set a random day so that the stabalizers don't run at the same time
 
-        */
+
         int interval = 2000;
         //int delay = Helper.getHelper().getRandom(10, interval);
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(task, 0, interval);
-
+        */
 
     }
 
-    private void start() {
+    public void start() {
         acceptor.start();
     }
 
-    private void stop() {
+    public void stop() {
         acceptor.shutdown();
         ringHandler.shutdown();
     }
