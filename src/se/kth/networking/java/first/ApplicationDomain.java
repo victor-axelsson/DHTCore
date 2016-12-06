@@ -8,6 +8,7 @@ import java.util.Map;
  */
 public interface ApplicationDomain {
     void storeKey(BigInteger key, String value);
+    void remove(BigInteger key);
     String getKey(BigInteger key);
     void foundKey(BigInteger key, String value);
     Map<BigInteger, String> getStore();

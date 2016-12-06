@@ -32,7 +32,7 @@ public class RingHandler {
         this.successor = this.self;
         this.app = app;
         this.fingers = new FingerTable(self, this);
-        socketQueue = new SocketQueue();
+        socketQueue = new SocketQueue(self);
 
         TimerTask stabilizeTask = new TimerTask() {
             @Override
@@ -69,12 +69,23 @@ public class RingHandler {
         stabilizeTimer.purge();
         fingerTimer.cancel();
         fingerTimer.purge();
+        socketQueue.stop();
         transferStoredData();
     }
 
     private void transferStoredData() {
         for (Map.Entry<BigInteger, String> entry : app.getStore().entrySet()) {
-            sendKeyToSuccessor(entry.getKey(), entry.getValue());
+            sendAddToNode(entry.getKey(), entry.getValue(), successor);
+        }
+    }
+
+    private void handoverDataOnNewPredecessor(Node newPredecessor) {
+        Set<Map.Entry<BigInteger, String>> entrySet = app.getStore().entrySet();
+        for (Map.Entry<BigInteger, String> entry : entrySet) {
+            if (!between(entry.getKey(), newPredecessor.getId(), self.getId())) { //that means that data is between our old predecessor and new predecessor, so hand it over
+                sendAddToNode(entry.getKey(), entry.getValue(), newPredecessor);
+                app.remove(entry.getKey());
+            }
         }
     }
 
@@ -251,7 +262,6 @@ public class RingHandler {
             socketQueue.sendMessage(new Node(rIp, rPort), message.toString(), new OnResponse<String>() {
                 @Override
                 public String onResponse(String response, Node node) {
-
                     JSONObject jsonResonse = new JSONObject(response);
                     String status = jsonResonse.getString("status");
 
@@ -333,6 +343,7 @@ public class RingHandler {
 
             // We don't have any predecessor, life is good
             predecessor = n;
+            handoverDataOnNewPredecessor(n);
             response.put("status", "accept");
 
             return response.toString();
@@ -341,6 +352,7 @@ public class RingHandler {
             //This should be our new predecessor
             if (between(n.getId(), predecessor.getId(), self.getId())) {
                 predecessor = n;
+                handoverDataOnNewPredecessor(n);
 
                 response.put("status", "accept");
                 return response.toString();
@@ -361,11 +373,11 @@ public class RingHandler {
         } else {
 
             System.out.println("Was not null" + predecessor);
-            sendKeyToSuccessor(key, value);
+            sendAddToNode(key, value, successor);
         }
     }
 
-    private void sendKeyToSuccessor(BigInteger key, String value) {
+    private void sendAddToNode(BigInteger key, String value, Node to) {
         JSONObject message = new JSONObject();
         message.put("ip", self.getIp());
         message.put("port", self.getPort());
@@ -374,10 +386,14 @@ public class RingHandler {
         message.put("value", value);
 
         try {
-            socketQueue.sendMessage(successor, message.toString(), null);
+            socketQueue.sendMessage(to, message.toString(), null);
         } catch (IOException e) {
-            handleUnresponsiveSuccessorNode(successor);
-            sendKeyToSuccessor(key, value); //retry
+            if (to.getId().equals(successor.getId())) {
+                handleUnresponsiveSuccessorNode(successor);
+                sendAddToNode(key, value, to); //retry
+            } else {
+                sendAddToNode(key, value, successor);
+            }
         }
     }
 
@@ -549,6 +565,7 @@ public class RingHandler {
         JSONObject message = new JSONObject(clientMessage);
         Node newPredecessor = new Node(message.getString("ip"), message.getInt("port"));
         predecessor = newPredecessor;
+        handoverDataOnNewPredecessor(newPredecessor);
     }
 
 

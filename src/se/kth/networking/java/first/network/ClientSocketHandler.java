@@ -44,7 +44,7 @@ public class ClientSocketHandler implements Runnable {
         System.out.println("CLickent socket reccived: " + msg);
         JSONObject obj = new JSONObject(msg);
         Node n = new Node(msg);
-        return  onResponse.onResponse(obj.toString(), n);
+        return onResponse.onResponse(obj.toString(), n);
     }
 
     private void handle(BufferedReader reader, PrintWriter writer) {

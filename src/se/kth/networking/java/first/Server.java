@@ -159,6 +159,11 @@ public class Server {
             }
 
             @Override
+            public void remove(BigInteger key) {
+                store.remove(key);
+            }
+
+            @Override
             public String getKey(BigInteger key) {
                 return store.get(key);
             }
@@ -176,21 +181,23 @@ public class Server {
 
 
         //Server server1 = new Server(app, "130.229.146.35", 5050);
-        Server server1 = new Server(app, "192.168.0.3", 5050);
+        //Server server1 = new Server(app, "192.168.0.3", 5050);
+        //server1.start();
+
+
+//        Server server1 = new Server(app, "130.229.146.35", 5050);
+//        Server server2 = new Server(app, "192.168.0.3", 6060);
+//        server2.start();
+//
+//        Thread.sleep(2000);
+//        server2.sendNotify("192.168.0.3", 5050);
+//
+//
+
+
+        Server server1 = new Server(app, null, 5050);
         server1.start();
-
-        /*
-        //Server server1 = new Server(app, "130.229.146.35", 5050);
-        Server server2 = new Server(app, "192.168.0.3", 6060);
-        server2.start();
-
-        Thread.sleep(2000);
-        server2.sendNotify("192.168.0.3", 5050);
-        */
-
-
-        /*
-
+        Thread.sleep(200);
         Server server2 = new Server(app, null, 6060);
         server2.start();
 
@@ -204,9 +211,9 @@ public class Server {
         Thread.sleep(200);
         server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
         Thread.sleep(200);
-
-        server2.addKey(new BigInteger("22"), "gravy");
-        //server2.addKey(new BigInteger("55"), "stuff");
+//
+//        server2.addKey(new BigInteger("22"), "gravy");
+//        server2.addKey(new BigInteger("55"), "stuff");
 
         Thread.sleep(3000);
        // server2.stop();
@@ -220,18 +227,18 @@ public class Server {
         servers.add(server3);
 
 
-        for (int i = 0; i < 3; i++) {
-            Server s = new Server(app);
-            servers.add(s);
-            s.start();
-            Thread.sleep(200);
-            System.out.println("Started: " + i);
-            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
-
-
-            Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
-            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
-        }
+//        for (int i = 0; i < 3; i++) {
+//            Server s = new Server(app);
+//            servers.add(s);
+//            s.start();
+//            Thread.sleep(200);
+//            System.out.println("Started: " + i);
+//            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
+//
+//
+//            Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
+//            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
+//        }
 
         Thread.sleep(200);
         //server2.stop();
@@ -245,11 +252,11 @@ public class Server {
             @Override
             public void run() {
                 System.out.println("run probe");
-                //server3.probe();
+                server3.probe();
                 System.out.println("do lookup");
 
-                //server1.lookup(new BigInteger("55"));
-                //server1.lookup(new BigInteger("22"));
+                server3.lookup(new BigInteger("55"));
+                server3.lookup(new BigInteger("22"));
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }
@@ -262,7 +269,7 @@ public class Server {
 
 
 
-        server2.stop();
+        //server2.stop();
 
         //Set a random day so that the stabalizers don't run at the same time
 
@@ -271,7 +278,7 @@ public class Server {
         //int delay = Helper.getHelper().getRandom(10, interval);
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(task, 0, interval);
-        */
+
 
     }
 

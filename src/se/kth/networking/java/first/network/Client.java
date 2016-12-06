@@ -52,7 +52,7 @@ public class Client {
         String ip=(((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/","");
         Node serverNode = new Node(ip, socket.getPort());
 
-        if(onResponse != null){
+        if(onResponse != null && reply != null){
             onResponse.onResponse(reply, serverNode);
         }
     }
