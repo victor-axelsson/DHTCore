@@ -16,6 +16,7 @@ public class Client {
     private String payload;
     private OnResponse<String> onResponse;
 
+    private static final int TIMEOUT = 5000;
 
     public Client(Socket socket, String payload, OnResponse<String> onResponse) {
         this.socket = socket;
@@ -41,11 +42,11 @@ public class Client {
         writer.write(payload + ENDLINE);
         writer.flush();
 
-        socket.setSoTimeout(30000);
+        socket.setSoTimeout(TIMEOUT);
         String reply = reader.readLine();
 
         if(reply == null){
-            System.err.println(payload);
+            System.err.println("Reply was null for " + payload);
         }
 
         //The server always listens on the same port, so we can use the socket for this purpose

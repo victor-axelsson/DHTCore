@@ -71,7 +71,7 @@ public class Server {
         return msg != null;
     }
 
-    private String handleMessage(String clientMessage, Node node){
+    private synchronized String handleMessage(String clientMessage, Node node){
 
         String response = "Bad request";
 
@@ -153,18 +153,24 @@ public class Server {
             HashMap<BigInteger, String> store = new HashMap<>();
 
             @Override
-            public void storeKey(BigInteger key, String value) {
+            public void store(BigInteger key, String value) {
                 store.put(key, value);
-                System.out.println(key + ":" + value);
+                System.out.println("Stored: Key:" + key + ", Value: " + value);
             }
 
             @Override
-            public String getKey(BigInteger key) {
+            public String get(BigInteger key) {
                 return store.get(key);
             }
 
             @Override
-            public void foundKey(BigInteger key, String value) {
+            public void remove(BigInteger key) {
+                store.remove(key);
+                System.out.println("Removed: Key:" + key);
+            }
+
+            @Override
+            public void onFound(BigInteger key, String value) {
                 System.out.println("Key:" + key + ", Value: " + value);
             }
 
@@ -235,10 +241,10 @@ public class Server {
             public void run() {
                 System.out.println("run probe");
                 server3.probe();
-                //System.out.println("do lookup");
+                System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));
-                //server1.lookup(new BigInteger("22"));
+                server1.lookup(new BigInteger("22"));
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }

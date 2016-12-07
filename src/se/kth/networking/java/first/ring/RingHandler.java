@@ -32,6 +32,11 @@ public class RingHandler {
         updateNextSuccessor();
     }
 
+    public void setPredecessor(Node predecessor) {
+        handoverDataOnNewPredecessor(predecessor);
+        this.predecessor = predecessor;
+    }
+
     public RingHandler(String ip, int port, ApplicationDomain app) {
         this.self = new Node(ip, port);
         this.successor = this.self;
@@ -75,12 +80,6 @@ public class RingHandler {
 //        fingerTimer.cancel();
 //        fingerTimer.purge();
         transferStoredData();
-    }
-
-    private void transferStoredData() {
-        for (Map.Entry<BigInteger, String> entry : app.getStore().entrySet()) {
-            sendKeyToSuccessor(entry.getKey(), entry.getValue());
-        }
     }
 
     private void updateFingerTable() {
@@ -197,6 +196,7 @@ public class RingHandler {
                 try {
                     sendNotify(successor.getIp(), successor.getPort());
                 } catch (IOException e) {
+                    e.printStackTrace();
                     handleUnresponsiveSuccessorNode(successor);
                 }
             }
@@ -219,6 +219,7 @@ public class RingHandler {
 
         } catch (IOException e) { //if exception -> node died
             System.out.println("Caught exception in probe");
+            e.printStackTrace();
             handleUnresponsiveSuccessorNode(successor);
         }
     }
@@ -237,6 +238,7 @@ public class RingHandler {
                 socketQueue.sendMessage(successor, message.toString(), null);
             } catch (IOException e) {
                 System.out.println("Caught exception in handleprobe");
+                e.printStackTrace();
                 handleUnresponsiveSuccessorNode(successor);
             }
         }
@@ -328,7 +330,7 @@ public class RingHandler {
         if (predecessor == null) {
 
             // We don't have any predecessor, life is good
-            predecessor = n;
+            setPredecessor(n);
             response.put("status", "accept");
 
             return response.toString();
@@ -336,7 +338,7 @@ public class RingHandler {
 
             //This should be our new predecessor
             if (between(n.getId(), predecessor.getId(), self.getId())) {
-                predecessor = n;
+                setPredecessor(n);
 
                 response.put("status", "accept");
                 return response.toString();
@@ -351,27 +353,11 @@ public class RingHandler {
 
         if (predecessor == null || between(key,  predecessor.getId(), self.getId())) {
             //System.out.println(self.getId() + " stored " + key + ":" + value); //debug stored
-            app.storeKey(key, value);
+            app.store(key, value);
         } else {
 
             System.out.println("Was not null" + predecessor);
-            sendKeyToSuccessor(key, value);
-        }
-    }
-
-    private void sendKeyToSuccessor(BigInteger key, String value) {
-        JSONObject message = new JSONObject();
-        message.put("ip", self.getIp());
-        message.put("port", self.getPort());
-        message.put("type", "add");
-        message.put("key", key);
-        message.put("value", value);
-
-        try {
-            socketQueue.sendMessage(successor, message.toString(), null);
-        } catch (IOException e) {
-            handleUnresponsiveSuccessorNode(successor);
-            sendKeyToSuccessor(key, value); //retry
+            sendAddToNode(key, value, successor);
         }
     }
 
@@ -383,14 +369,14 @@ public class RingHandler {
 
         if (predecessor == null || between(key, predecessor.getId(), self.getId())) {
             //do the lookup on this node
-            String value = app.getKey(key);
+            String value = app.get(key);
 
             message.put("type", "lookup_response");
             message.put("key", key);
-            message.put("value", value);
+            message.put("value", value == null ? "null" : value);
 
             try {
-                socketQueue.sendMessage(successor, message.toString(), null);
+                socketQueue.sendMessage(asker, message.toString(), null);
             } catch (IOException e) {
                 handleUnresponsiveSuccessorNode(successor);
             }
@@ -456,8 +442,7 @@ public class RingHandler {
 
     public void deliverLookup(String clientMessage) {
         JSONObject jsonRequest = new JSONObject(clientMessage);
-        app.foundKey(jsonRequest.getBigInteger("key"), jsonRequest.getString("value"));
-
+        app.onFound(jsonRequest.getBigInteger("key"), jsonRequest.getString("value"));
     }
 
 
@@ -540,8 +525,46 @@ public class RingHandler {
         System.out.println("Unlinking");
         JSONObject message = new JSONObject(clientMessage);
         Node newPredecessor = new Node(message.getString("ip"), message.getInt("port"));
-        predecessor = newPredecessor;
+        setPredecessor(newPredecessor);
     }
 
+    private void transferStoredData() {
+        for (Map.Entry<BigInteger, String> entry : app.getStore().entrySet()) {
+            sendAddToNode(entry.getKey(), entry.getValue(), successor);
+        }
+    }
+
+    private void handoverDataOnNewPredecessor(Node newPredecessor) {
+        Set<Map.Entry<BigInteger, String>> entrySet = app.getStore().entrySet();
+        for (Map.Entry<BigInteger, String> entry : entrySet) {
+            //that means that data is between our old predecessor and new predecessor, so hand it over
+            if (predecessor == null || between(entry.getKey(), predecessor.getId(), newPredecessor.getId())) {  //TODO check!!!
+                sendAddToNode(entry.getKey(), entry.getValue(), newPredecessor);
+                System.out.println("Need to handover\nNew predecessor " + newPredecessor + "\nOld predecessor" + predecessor +
+                        "\n" + entry.getKey() + " : " + entry.getValue());
+                app.remove(entry.getKey());
+            }
+        }
+    }
+
+    private void sendAddToNode(BigInteger key, String value, Node to) {
+        JSONObject message = new JSONObject();
+        message.put("ip", self.getIp());
+        message.put("port", self.getPort());
+        message.put("type", "add");
+        message.put("key", key);
+        message.put("value", value);
+
+        try {
+            socketQueue.sendMessage(to, message.toString(), null);
+        } catch (IOException e) {
+            if (to.getId().equals(successor.getId())) {
+                handleUnresponsiveSuccessorNode(successor);
+                sendAddToNode(key, value, to); //retry
+            } else {
+                sendAddToNode(key, value, successor);
+            }
+        }
+    }
 
 }
