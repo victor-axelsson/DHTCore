@@ -112,9 +112,9 @@ public class Server {
 //                case "successorChanged":
 //                    ringHandler.updateNextSuccessor();
 //                    break;
-//                case "unlink_predecessor":
-//                    ringHandler.unlinkPredecessor(clientMessage);
-//                    break;
+                case "unlink_predecessor":
+                    ringHandler.unlinkPredecessor(clientMessage);
+                    break;
                 case "add":
                     String payload = message.getString("value");
                     BigInteger key = message.getBigInteger("key");
@@ -198,7 +198,7 @@ public class Server {
         //server2.addKey(new BigInteger("55"), "stuff");
 
         Thread.sleep(3000);
-       // server2.stop();
+        server2.stop();
 
         server2.lookup(new BigInteger("55"));
         server3.probe();
@@ -234,8 +234,8 @@ public class Server {
             @Override
             public void run() {
                 System.out.println("run probe");
-                //server3.probe();
-                System.out.println("do lookup");
+                server3.probe();
+                //System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));
                 //server1.lookup(new BigInteger("22"));

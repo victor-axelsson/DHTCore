@@ -27,6 +27,11 @@ public class RingHandler {
     Timer fingerTimer;
     SocketQueue socketQueue;
 
+    public void setSuccessor(Node successor) {
+        this.successor = successor;
+        updateNextSuccessor();
+    }
+
     public RingHandler(String ip, int port, ApplicationDomain app) {
         this.self = new Node(ip, port);
         this.successor = this.self;
@@ -67,8 +72,8 @@ public class RingHandler {
     public void shutdown() {
         stabilizeTimer.cancel();
         stabilizeTimer.purge();
-        fingerTimer.cancel();
-        fingerTimer.purge();
+//        fingerTimer.cancel();
+//        fingerTimer.purge();
         transferStoredData();
     }
 
@@ -127,6 +132,7 @@ public class RingHandler {
             });
         } catch (IOException e) {
             System.out.println("Caught exception in stabilize " + e.getMessage());
+            e.printStackTrace();
             handleUnresponsiveSuccessorNode(successor);
         }
 
@@ -182,15 +188,9 @@ public class RingHandler {
                 // we probably hve the wrong successor
                 try {
                     sendNotify(otherPredesesor.getIp(), otherPredesesor.getPort());
-
-                    nextSuccessor = successor;
-
-                    if(otherPredesesor == null){
-                        System.out.println("Was null");
-                    }
-                    successor = otherPredesesor;
+                    setSuccessor(otherPredesesor);
                 } catch (IOException e) {
-
+                    e.printStackTrace();
                 }
             } else {
                 //we should be in between the successor and its predecessor
@@ -260,10 +260,10 @@ public class RingHandler {
                     String status = jsonResonse.getString("status");
 
                     if (status.equalsIgnoreCase("accept")) {
-                        successor = node;
+                        setSuccessor(node);
                     } else {
                         // Now what? I think this will be fixed with stabilization
-                        successor = node;
+                        setSuccessor(node);
                     }
 
 
@@ -306,7 +306,9 @@ public class RingHandler {
                 String successor = jsonResonse.getString("successor");
 
                 if (!successor.equalsIgnoreCase("null")) {
-                    nextSuccessor = new Node(successor);
+                    Node successorsSuccessor = new Node(successor);
+                    if (!successorsSuccessor.getId().equals(this.successor.getId()))
+                        nextSuccessor = successorsSuccessor;
                 }
                 return null;
             });
@@ -496,34 +498,32 @@ public class RingHandler {
             System.out.println(successor.toString() + " is not responding to " + self.toString());
             if (nextSuccessor != null) {
 
-//                unlinkPredecessor(nextSuccessor, successor);
+                unlinkPredecessor(nextSuccessor, successor);
 
                 if(nextSuccessor == null){
                     System.out.println("was null");
                 }
-                successor = nextSuccessor;
-                nextSuccessor = null;
-                //updateNextSuccessor();
+                setSuccessor(nextSuccessor);
             } else {
-                successor = self; //TODO drop probe?
+                setSuccessor(self);
             }
         }
     }
 
-//    private void unlinkPredecessor(Node nextSuccessor, Node successor) {
-//
-//        JSONObject message = new JSONObject();
-//        message.put("ip", self.getIp());
-//        message.put("port", self.getPort());
-//        message.put("type", "unlink_predecessor");
-//        message.put("predecessor", successor);
-//
-//        try {
-//            socketQueue.sendMessage(nextSuccessor, message.toString(), null);
-//        } catch (IOException e) {
-//            System.out.println("Well, fuck. We are linked out. Find some node in the finger table and stabilize");
-//        }
-//    }
+    private void unlinkPredecessor(Node nextSuccessor, Node successor) {
+
+        JSONObject message = new JSONObject();
+        message.put("ip", self.getIp());
+        message.put("port", self.getPort());
+        message.put("type", "unlink_predecessor");
+        message.put("predecessor", successor);
+
+        try {
+            socketQueue.sendMessage(nextSuccessor, message.toString(), null);
+        } catch (IOException e) {
+            System.out.println("Well, fuck. We are linked out. Find some node in the finger table and stabilize");
+        }
+    }
 
 
 
