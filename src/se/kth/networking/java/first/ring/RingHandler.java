@@ -48,20 +48,20 @@ public class RingHandler {
         stabilizeTimer = new Timer();
         stabilizeTimer.scheduleAtFixedRate(stabilizeTask, delay, interval);
 
-        TimerTask fingers = new TimerTask() {
-            @Override
-            public void run() {
-                updateFingerTable();
-            }
-        };
-
-        // Set a random day so that the stabalizers don't run at the same time
-        int interval2 = 10000;
-        int delay2 = Helper.getHelper().getRandom(10, interval2);
-
-        fingerTimer = new Timer();
-
-        fingerTimer.scheduleAtFixedRate(fingers, delay2, interval2);
+//        TimerTask fingers = new TimerTask() {
+//            @Override
+//            public void run() {
+//                updateFingerTable();
+//            }
+//        };
+//
+//        // Set a random day so that the stabalizers don't run at the same time
+//        int interval2 = 10000;
+//        int delay2 = Helper.getHelper().getRandom(10, interval2);
+//
+//        fingerTimer = new Timer();
+//
+//        fingerTimer.scheduleAtFixedRate(fingers, delay2, interval2);
     }
 
     public void shutdown() {
@@ -268,9 +268,9 @@ public class RingHandler {
 
 
                     updateNextSuccessor();
-                    if (predecessor != null)
-                        notifyPredecessorOfNewSuccessor();
-
+//                    if (predecessor != null)
+//                        notifyPredecessorOfNewSuccessor();
+//
 
                     return null;
                 }
@@ -407,20 +407,20 @@ public class RingHandler {
     }
 
     private Node lookupHelper(BigInteger id) {
-        if (fingers.getTable() == null) return successor;
-
-        for (int i = fingers.getTable().size() - 1; i >= 0; i--) {
-            Node current = fingers.getTable().get(i);
-            Node previous = null;
-            if (i == fingers.getTable().size() - 1) {
-                previous = fingers.getTable().get(0);
-            } else {
-                previous = fingers.getTable().get(i + 1);
-            }
-
-            if (between(id, previous.getId(), current.getId()))
-                return current;
-        }
+//        if (fingers.getTable() == null) return successor;
+//
+//        for (int i = fingers.getTable().size() - 1; i >= 0; i--) {
+//            Node current = fingers.getTable().get(i);
+//            Node previous = null;
+//            if (i == fingers.getTable().size() - 1) {
+//                previous = fingers.getTable().get(0);
+//            } else {
+//                previous = fingers.getTable().get(i + 1);
+//            }
+//
+//            if (between(id, previous.getId(), current.getId()))
+//                return current;
+//        }
         return successor; // never
     }
 
@@ -496,7 +496,7 @@ public class RingHandler {
             System.out.println(successor.toString() + " is not responding to " + self.toString());
             if (nextSuccessor != null) {
 
-                unlinkPredecessor(nextSuccessor, successor);
+//                unlinkPredecessor(nextSuccessor, successor);
 
                 if(nextSuccessor == null){
                     System.out.println("was null");
@@ -510,20 +510,20 @@ public class RingHandler {
         }
     }
 
-    private void unlinkPredecessor(Node nextSuccessor, Node successor) {
-
-        JSONObject message = new JSONObject();
-        message.put("ip", self.getIp());
-        message.put("port", self.getPort());
-        message.put("type", "unlink_predecessor");
-        message.put("predecessor", successor);
-
-        try {
-            socketQueue.sendMessage(nextSuccessor, message.toString(), null);
-        } catch (IOException e) {
-            System.out.println("Well, fuck. We are linked out. Find some node in the finger table and stabilize");
-        }
-    }
+//    private void unlinkPredecessor(Node nextSuccessor, Node successor) {
+//
+//        JSONObject message = new JSONObject();
+//        message.put("ip", self.getIp());
+//        message.put("port", self.getPort());
+//        message.put("type", "unlink_predecessor");
+//        message.put("predecessor", successor);
+//
+//        try {
+//            socketQueue.sendMessage(nextSuccessor, message.toString(), null);
+//        } catch (IOException e) {
+//            System.out.println("Well, fuck. We are linked out. Find some node in the finger table and stabilize");
+//        }
+//    }
 
 
 
