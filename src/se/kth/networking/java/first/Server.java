@@ -203,11 +203,8 @@ public class Server {
         server2.addKey(new BigInteger("22"), "gravy");
         //server2.addKey(new BigInteger("55"), "stuff");
 
-        Thread.sleep(3000);
+        Thread.sleep(10000);
         server2.stop();
-
-        server2.lookup(new BigInteger("55"));
-        server3.probe();
 
         List<Server> servers = new ArrayList<>();
         servers.add(server1);
@@ -262,10 +259,10 @@ public class Server {
         //Set a random day so that the stabalizers don't run at the same time
 
         */
-        int interval = 2000;
+        int interval = 3000;
         //int delay = Helper.getHelper().getRandom(10, interval);
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(task, 0, interval);
+    //    timer.scheduleAtFixedRate(task, 10000, interval);
 
 
     }

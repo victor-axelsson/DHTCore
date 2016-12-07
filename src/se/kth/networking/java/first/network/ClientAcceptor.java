@@ -21,7 +21,7 @@ public class ClientAcceptor extends Thread{
 
     public ClientAcceptor(int port, OnResponse onResponse) throws IOException{
         this.serverSocket = new ServerSocket(port);
-        this.executorService = Executors.newFixedThreadPool(5);
+        this.executorService = Executors.newFixedThreadPool(500);
         this.onResponse = onResponse;
     }
 
@@ -58,7 +58,7 @@ public class ClientAcceptor extends Thread{
         try {
             this.serverSocket.close();
             if (!executorService.awaitTermination(500, TimeUnit.MILLISECONDS))
-                System.err.println("Pool did not terminate");
+                System.err.println("ServerSocket did not terminate");
 
         } catch (InterruptedException e) {
             e.printStackTrace();

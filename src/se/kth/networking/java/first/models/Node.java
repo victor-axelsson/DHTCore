@@ -54,4 +54,21 @@ public class Node {
         return obj.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Node node = (Node) o;
+
+        if (port != node.port) return false;
+        return ip != null ? ip.equals(node.ip) : node.ip == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = ip != null ? ip.hashCode() : 0;
+        result = 31 * result + port;
+        return result;
+    }
 }
