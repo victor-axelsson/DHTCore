@@ -225,8 +225,8 @@ public class Server {
         server2.addKey(key, "gravy");
         //server2.addKey(new BigInteger("55"), "stuff");
 
-//        Thread.sleep(10000);
-//        server2.stop();
+        Thread.sleep(10000);
+        server2.stop();
 
         List<Server> servers = new ArrayList<>();
         servers.add(server1);
@@ -263,7 +263,7 @@ public class Server {
                 System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));
-                server2.lookup(key);
+                server3.lookup(key);
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }
