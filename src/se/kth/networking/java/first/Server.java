@@ -117,8 +117,11 @@ public class Server {
                 case "add":
                     String payload = message.getString("value");
                     BigInteger key = message.getBigInteger("key");
-
                     ringHandler.addKey(key, payload);
+                    break;
+                case "remove":
+                    BigInteger removeKey = message.getBigInteger("key");
+                    ringHandler.removeKey(removeKey);
                     break;
             }
         }
@@ -223,7 +226,7 @@ public class Server {
 
         BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
         server2.addKey(key, "gravy");
-        //server2.addKey(new BigInteger("55"), "stuff");
+        server2.addKey(new BigInteger("55"), "stuff");
 
         Thread.sleep(10000);
         server2.stop();
@@ -232,6 +235,7 @@ public class Server {
         servers.add(server1);
         servers.add(server2);
         servers.add(server3);
+        server4.getRingHandler().removeKey(new BigInteger("55"));
 
         /*
         for (int i = 0; i < 3; i++) {

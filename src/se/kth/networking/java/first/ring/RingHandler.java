@@ -375,9 +375,7 @@ public class RingHandler {
             //System.out.println(self.getId() + " stored " + key + ":" + value); //debug stored
             app.store(key, value);
         } else {
-
-            System.out.println("Was not null" + predecessor);
-            sendAddToNode(key, value, successor);
+            sendAddToNode(key, value, lookupHelper(key));
         }
     }
 
@@ -590,5 +588,36 @@ public class RingHandler {
             JSONObject obj = values.getJSONObject(i);
             app.store(obj.getBigInteger("key"), obj.getString("value"));
         }
+    }
+
+    public void removeKey(BigInteger key) {
+
+        if (predecessor == null || predecessor.equals(self) || between(key,  predecessor.getId(), self.getId())) {
+            //System.out.println(self.getId() + " stored " + key + ":" + value); //debug stored
+            app.remove(key);
+        } else {
+            sendRemoveToNode(key, lookupHelper(key));
+        }
+    }
+
+    private void sendRemoveToNode(BigInteger key, Node node) {
+        JSONObject message = new JSONObject();
+        message.put("ip", self.getIp());
+        message.put("port", self.getPort());
+        message.put("type", "remove");
+        message.put("key", key);
+
+        try {
+            socketQueue.sendMessage(node, this.getSelf(), message.toString(), null);
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            if (node.getId().equals(successor.getId())) {
+                handleUnresponsiveSuccessorNode();
+                sendRemoveToNode(key, node); //retry
+            } else {
+                sendRemoveToNode(key, successor);
+            }
+        }
+
     }
 }
