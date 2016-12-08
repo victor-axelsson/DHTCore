@@ -128,7 +128,7 @@ public class RingHandler {
                         otherSuccessor = new Node(jsonResponse.getString("successor"));
                     }
 
-                    onStabilizeRequest(otherPredesessor, otherSuccessor);
+                    onStabilizeRequest(otherPredesessor, otherSuccessor, node);
                     return null;
                 }
             });
@@ -159,34 +159,33 @@ public class RingHandler {
         return response.toString();
     }
 
-    public void onStabilizeRequest(Node otherPredesesor, Node otherSuccessor) {
+    public void onStabilizeRequest(Node otherPredesesor, Node otherSuccessor, Node other) {
 
         if (otherPredesesor == null) {
 
             // It have no predecessor, notify our successor that its predecessor might be us
             try {
-                sendNotify(successor.getIp(), successor.getPort());
+                sendNotify(other.getIp(), other.getPort());
             } catch (IOException e) {
                 e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode(successor);
+                handleUnresponsiveSuccessorNode(other);
             }
 
         } else if (Objects.equals(otherPredesesor.getId(), self.getId())) {
             //All is well, its us.
+            System.out.println("it us");
 
-        } else if (Objects.equals(otherPredesesor.getId(), successor.getId())) {
+        } else if (Objects.equals(otherPredesesor.getId(), other.getId())) {
             //The successors predesessor is itself, we should probably be there instead
             try {
-                sendNotify(successor.getIp(), successor.getPort());
+                sendNotify(other.getIp(), other.getPort());
             } catch (IOException e) {
                 e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode(successor);
+                handleUnresponsiveSuccessorNode(other);
             }
 
         } else {
-            if (between(otherPredesesor.getId(), self.getId(), successor.getId())) {
-
-
+            if (between(otherPredesesor.getId(), self.getId(), other.getId())) {
 
                 // we probably hve the wrong successor
                 try {
@@ -199,10 +198,10 @@ public class RingHandler {
             } else {
                 //we should be in between the successor and its predecessor
                 try {
-                    sendNotify(successor.getIp(), successor.getPort());
+                    sendNotify(other.getIp(), other.getPort());
                 } catch (IOException e) {
                     e.printStackTrace(System.err);
-                    handleUnresponsiveSuccessorNode(successor);
+                    handleUnresponsiveSuccessorNode(other);
                 }
             }
         }
@@ -253,14 +252,10 @@ public class RingHandler {
     }
 
     public void sendNotify(String rIp, int rPort) throws IOException {
-
-
             JSONObject message = new JSONObject();
             message.put("ip", self.getIp());
             message.put("port", self.getPort());
             message.put("type", "notify");
-
-            //String msg = "notify:" + ip + "," + port;
 
             socketQueue.sendMessage(new Node(rIp, rPort), this.getSelf(), message.toString(), new OnResponse<String>() {
                 @Override

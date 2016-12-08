@@ -41,7 +41,7 @@ public class Server {
                 }
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
     }
 
@@ -61,7 +61,7 @@ public class Server {
             port = socket.getLocalPort();
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
         return port;
     }
