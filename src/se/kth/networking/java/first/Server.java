@@ -263,7 +263,7 @@ public class Server {
                 System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));
-                server1.lookup(key);
+                server2.lookup(key);
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }

@@ -28,33 +28,41 @@ public class FingerTable {
         setupFingerKeys();
     }
 
-    private void setupFingerKeys(){
-        for(int i = 0; i < RING_BIT_SIZE; i++){
+    private void setupFingerKeys() {
+        for (int i = 0; i < RING_BIT_SIZE; i++) {
             fingers.add((self.getId().add(new BigInteger(String.valueOf(2)).pow(i)).subtract(BigInteger.ONE))
                     .mod(new BigInteger(String.valueOf(2)).pow(RING_BIT_SIZE)));
         }
     }
 
-    public String createFingerProbeMessage(){
+    public String createFingerProbeMessage() {
         JSONObject message = new JSONObject();
         message.put("ip", self.getIp());
         message.put("port", self.getPort());
         message.put("type", "finger_probe");
-        message.put("keys", new JSONArray(fingers.toArray()));
+
+        List<BigInteger> keys = new ArrayList<>();
+
+        for (int i = 0; i < fingers.size(); i++) {
+            if (!ringHandler.isThisOurKey(fingers.get(i)))
+                keys.add(fingers.get(i));
+        }
+        message.put("keys", keys);
+
         message.put("fingers", new JSONArray());
 
         return message.toString();
     }
 
-    public String dealWithFingerProbe(String message, OnResponse<String> onDone){
+    public String dealWithFingerProbe(String message, OnResponse<String> onDone) {
         JSONObject jsonMessage = new JSONObject(message);
         List<Object> keys = jsonMessage.getJSONArray("keys").toList();
 
         List<BigInteger> notFoundKeys = new ArrayList<>();
 
-        for(int i = 0; i < keys.size(); i++){
+        for (int i = 0; i < keys.size(); i++) {
             BigInteger key = new BigInteger(keys.get(i).toString());
-            if(ringHandler.isThisOurKey(key)){
+            if (ringHandler.isThisOurKey(key)) {
                 jsonMessage.getJSONArray("fingers").put(new JSONObject(self.toString()));
             } else {
                 notFoundKeys.add(key);
@@ -64,7 +72,7 @@ public class FingerTable {
         jsonMessage.remove("keys");
         jsonMessage.put("keys", notFoundKeys);
 
-        if(notFoundKeys.isEmpty() || jsonMessage.getString("ip").equals(self.getIp()) && jsonMessage.getInt("port") == self.getPort()){
+        if (notFoundKeys.isEmpty() || jsonMessage.getString("ip").equals(self.getIp()) && jsonMessage.getInt("port") == self.getPort()) {
             Node sender = new Node(jsonMessage.toString());
             jsonMessage.put("type", "finger_probe_response");
             onDone.onResponse(jsonMessage.toString(), sender);
@@ -78,7 +86,7 @@ public class FingerTable {
         JSONArray fingers = response.getJSONArray("fingers");
         table = new ArrayList<>();
 
-        for(int i = 0; i < fingers.length(); i++){
+        for (int i = 0; i < fingers.length(); i++) {
             table.add(new Node(fingers.get(i).toString()));
         }
 

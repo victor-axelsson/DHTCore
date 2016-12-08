@@ -94,8 +94,8 @@ public class RingHandler {
         };
 
         // Set a random day so that the stabalizers don't run at the same time
-        int interval2 = 10000;
-        int delay2 = Helper.getHelper().getRandom(10, interval2);
+        int interval2 = 30000;
+        int delay2 = Helper.getHelper().getRandom(interval2/2, interval2);
 
         fingerTimer = new Timer();
 
@@ -493,14 +493,7 @@ public class RingHandler {
 
     private synchronized void handleUnresponsiveSuccessorNode() {
 
-        boolean isRepsonsive = false;
-        try {
-            successor.getAsSocket();
-            isRepsonsive = true;
-        } catch (IOException e) {
-            e.printStackTrace(System.err);
-            isRepsonsive = false;
-        }
+        boolean isRepsonsive = Monitor.isResponsive(successor);
 
         System.out.println("Was responsive:" + isRepsonsive);
 

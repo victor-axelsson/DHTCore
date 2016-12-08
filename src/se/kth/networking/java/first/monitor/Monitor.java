@@ -1,6 +1,7 @@
 package se.kth.networking.java.first.monitor;
 
 import se.kth.networking.java.first.Helper;
+import se.kth.networking.java.first.models.Node;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -69,6 +70,23 @@ public class Monitor {
         pingTimer.purge();
         listeners = null;
         pingTimer = null;
+    }
+
+    public static boolean isResponsive(Node node) {
+        Socket s = null;
+        try {
+            s = node.getAsSocket();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            return false;
+        } finally {
+            if (s != null) try {
+                s.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }
