@@ -261,8 +261,7 @@ public class Server {
         int interval = 3000;
         //int delay = Helper.getHelper().getRandom(10, interval);
         Timer timer = new Timer();
-    //    timer.scheduleAtFixedRate(task, 10000, interval);
-
+        timer.scheduleAtFixedRate(task, 5000, interval);
 
     }
 
