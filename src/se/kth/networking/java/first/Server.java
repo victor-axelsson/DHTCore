@@ -209,12 +209,18 @@ public class Server {
         Server server3 = new Server(app, null, 7070);
         server3.start();
 
+
+        Server server4 = new Server(app, null, 7071);
+        server4.start();
+
         Thread.sleep(1000);
 
         //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
         server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
         Thread.sleep(1000);
         server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server4.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
         //Thread.sleep(1000);
 
 
