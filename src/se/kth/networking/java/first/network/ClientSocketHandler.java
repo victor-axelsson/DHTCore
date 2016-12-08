@@ -28,7 +28,7 @@ public class ClientSocketHandler implements Runnable {
             writer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()));
             handle(reader, writer);
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         } finally {
             if (writer != null) writer.close();
             if (reader != null) try {
@@ -41,7 +41,6 @@ public class ClientSocketHandler implements Runnable {
     }
 
     private String deliverMessage(String msg){
-        System.out.println("CLickent socket reccived: " + msg);
         JSONObject obj = new JSONObject(msg);
         Node n = new Node(msg);
         return  onResponse.onResponse(obj.toString(), n);
@@ -57,7 +56,7 @@ public class ClientSocketHandler implements Runnable {
                 writer.flush();
             }
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace(System.err);
             onResponse.onResponse("error:" + e.getMessage(), null);
         }
     }

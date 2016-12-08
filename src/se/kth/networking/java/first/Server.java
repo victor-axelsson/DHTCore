@@ -37,7 +37,6 @@ public class Server {
             acceptor = new ClientAcceptor(port, new OnResponse<String>(){
                 @Override
                 public String onResponse(String response, Node node) {
-                    System.out.println("Received request");
                     return handleMessage(response, node);
                 }
             });
@@ -76,12 +75,12 @@ public class Server {
         String response = "Bad request";
 
         System.out.println("RECEIVED: " + clientMessage + " \nSELF:" + getRingHandler().getSelf().getPort());
-       // System.out.println("SELF: " + ringHandler.getSelf());
         JSONObject message = null;
         try{
             message = new JSONObject(clientMessage);
         }catch(Exception e){
-            System.out.println("Client message: " + clientMessage);
+            e.printStackTrace(System.err);
+            System.err.println("Could not parse message: " + clientMessage);
             return response;
         }
 
@@ -192,6 +191,8 @@ public class Server {
         Server server3 = new Server(app, null, 7070);
         server3.start();
 
+        Thread.sleep(1000);
+
         //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
         server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
         Thread.sleep(1000);
@@ -236,7 +237,7 @@ public class Server {
             @Override
             public void run() {
                 //System.out.println("run probe");
-                server3.probe();
+                //server3.probe();
                 //System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));

@@ -238,11 +238,15 @@ public class RingHandler {
             System.out.println("I got it back from the ring, " + clientMessage);
         } else {
             try {
-                message.put("nodes", message.getJSONArray("nodes").put(new JSONObject(self.toString())));
+                JSONObject selfProbe = new JSONObject(self.toString());
+                selfProbe.put("predeccesor", predecessor == null ? "null" : predecessor.getPort());
+                selfProbe.put("successor", successor == null ? "null" : successor.getPort());
+                selfProbe.put("next", nextSuccessor == null ? "null" : nextSuccessor.getPort());
+
+                message.put("nodes", message.getJSONArray("nodes").put(selfProbe));
                 socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null);
             } catch (IOException e) {
-                System.out.println("Caught exception in handleprobe");
-                e.printStackTrace();
+                e.printStackTrace(System.err);
                 handleUnresponsiveSuccessorNode(successor);
             }
         }

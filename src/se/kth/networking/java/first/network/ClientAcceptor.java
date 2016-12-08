@@ -27,7 +27,8 @@ public class ClientAcceptor extends Thread{
 
 
     private void handleClient(Socket client) throws InterruptedException {
-        System.out.println("Count: " + ((ThreadPoolExecutor) executorService).getActiveCount());
+        System.out.println("Thread count: " + ((ThreadPoolExecutor) executorService).getActiveCount());
+        executorService.submit(new ClientSocketHandler(client, onResponse));
         executorService.submit(new ClientSocketHandler(client, onResponse));
     }
 
