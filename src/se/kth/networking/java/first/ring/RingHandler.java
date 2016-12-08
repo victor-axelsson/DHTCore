@@ -12,6 +12,7 @@ import se.kth.networking.java.first.monitor.MonitorModel;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.Socket;
 import java.util.*;
 
 /**
@@ -117,6 +118,7 @@ public class RingHandler {
                 !predecessor.getId().equals(self.getId())){
 
             JSONObject message = new JSONObject(fingers.createFingerProbeMessage());
+
             try {
                 socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null);
             } catch (IOException e) {
@@ -164,7 +166,6 @@ public class RingHandler {
             e.printStackTrace(System.err);
             handleUnresponsiveSuccessorNode();
         }
-
     }
 
     public String onRequest(String clientMessage, Node node) {
@@ -494,12 +495,22 @@ public class RingHandler {
     private synchronized void handleUnresponsiveSuccessorNode() {
 
         boolean isRepsonsive = false;
+
+        Socket s = null;
         try {
-            successor.getAsSocket();
+            s = successor.getAsSocket();
             isRepsonsive = true;
         } catch (IOException e) {
             e.printStackTrace(System.err);
             isRepsonsive = false;
+        }finally {
+            if(s != null){
+                try {
+                    s.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         System.out.println("Was responsive:" + isRepsonsive);

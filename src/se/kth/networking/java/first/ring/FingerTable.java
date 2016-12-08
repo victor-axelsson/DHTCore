@@ -5,6 +5,8 @@ import org.json.JSONObject;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +50,9 @@ public class FingerTable {
 
     public String dealWithFingerProbe(String message, OnResponse<String> onDone){
         JSONObject jsonMessage = new JSONObject(message);
-        List<Object> keys = jsonMessage.getJSONArray("keys").toList();
 
+
+        List<Object> keys = jsonMessage.getJSONArray("keys").toList();
         List<BigInteger> notFoundKeys = new ArrayList<>();
 
         for(int i = 0; i < keys.size(); i++){
@@ -67,6 +70,7 @@ public class FingerTable {
         if(notFoundKeys.isEmpty() || jsonMessage.getString("ip").equals(self.getIp()) && jsonMessage.getInt("port") == self.getPort()){
             Node sender = new Node(jsonMessage.toString());
             jsonMessage.put("type", "finger_probe_response");
+
             onDone.onResponse(jsonMessage.toString(), sender);
         }
 
@@ -83,6 +87,24 @@ public class FingerTable {
         }
 
         System.out.println("Table is " + table);
+
+        saveTable();
+    }
+
+    private void saveTable(){
+
+        try{
+            PrintWriter writer = new PrintWriter(ringHandler.getSelf().getPort() + "table.csv", "UTF-8");
+            for(Node n : table){
+                writer.println(n.getId() + "," + n.getIp() + "," + n.getPort() +"\n");
+            }
+            writer.close();
+        } catch (IOException e) {
+            // do something
+        }
+        String csv = "";
+
+
     }
 
     public List<Node> getTable() {
