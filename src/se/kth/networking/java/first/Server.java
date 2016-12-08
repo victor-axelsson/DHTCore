@@ -220,13 +220,14 @@ public class Server {
         Thread.sleep(1000);
         server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
         Thread.sleep(1000);
-        server4.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        server4.sendNotify(server3.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
         //Thread.sleep(1000);
 
 
         BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
         server2.addKey(key, "gravy");
-        server2.addKey(new BigInteger("55"), "stuff");
+        //server2.addKey(new BigInteger("55"), "stuff");
 
         Thread.sleep(10000);
         server2.stop();
@@ -235,6 +236,7 @@ public class Server {
         servers.add(server1);
         servers.add(server2);
         servers.add(server3);
+        Thread.sleep(10000);
         server4.getRingHandler().removeKey(new BigInteger("55"));
 
         /*

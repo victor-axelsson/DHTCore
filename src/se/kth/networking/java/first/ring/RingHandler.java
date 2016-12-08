@@ -613,9 +613,9 @@ public class RingHandler {
             e.printStackTrace(System.err);
             if (node.getId().equals(successor.getId())) {
                 handleUnresponsiveSuccessorNode();
-                sendRemoveToNode(key, node); //retry
+              //  sendRemoveToNode(key, node); //retry
             } else {
-                sendRemoveToNode(key, successor);
+              //  sendRemoveToNode(key, successor);
             }
         }
 
