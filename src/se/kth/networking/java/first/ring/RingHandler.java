@@ -7,6 +7,8 @@ import se.kth.networking.java.first.ApplicationDomain;
 import se.kth.networking.java.first.Helper;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
+import se.kth.networking.java.first.monitor.Monitor;
+import se.kth.networking.java.first.monitor.MonitorModel;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -26,6 +28,7 @@ public class RingHandler {
     Timer stabilizeTimer;
     Timer fingerTimer;
     SocketQueue socketQueue;
+    Monitor monitor;
 
     public void setSuccessor(Node successor) {
         this.successor = successor;
@@ -33,9 +36,37 @@ public class RingHandler {
     }
 
     public void setPredecessor(Node newPredecessor) {
-        if (!getSelf().equals(newPredecessor))
-            handoverDataOnNewPredecessor(newPredecessor);
         this.predecessor = newPredecessor;
+
+        if (newPredecessor!= null && !getSelf().equals(newPredecessor)){
+            handoverDataOnNewPredecessor(newPredecessor);
+
+            monitor.addMonitor(new MonitorModel(new OnResponse<String>() {
+                @Override
+                public String onResponse(String response, Node node) {
+                    predecessor = null;
+                    System.err.println("set to null");
+                    return null;
+                }
+            }, "predecessor", predecessor));
+        }
+    }
+
+    public void setNextSuccessor(Node next){
+        this.nextSuccessor = next;
+
+        if (next!= null && !getSelf().equals(next)){
+            handoverDataOnNewPredecessor(next);
+
+            monitor.addMonitor(new MonitorModel(new OnResponse<String>() {
+                @Override
+                public String onResponse(String response, Node node) {
+                    nextSuccessor = null;
+                    System.err.println("set to null");
+                    return null;
+                }
+            }, "next", nextSuccessor));
+        }
     }
 
     public RingHandler(String ip, int port, ApplicationDomain app) {
@@ -44,6 +75,7 @@ public class RingHandler {
         this.app = app;
         this.fingers = new FingerTable(self, this);
         socketQueue = new SocketQueue();
+        monitor = new Monitor();
 
         TimerTask stabilizeTask = new TimerTask() {
             @Override
@@ -78,6 +110,7 @@ public class RingHandler {
     public void shutdown() {
         stabilizeTimer.cancel();
         stabilizeTimer.purge();
+        monitor.stop();
 //        fingerTimer.cancel();
 //        fingerTimer.purge();
         transferStoredData();
@@ -213,13 +246,9 @@ public class RingHandler {
             message.put("type", "probe");
             JSONArray nodes = new JSONArray();
             nodes.put(new JSONObject(self.toString()));
-            message.put("nodes", nodes);
-            message.put("successor", successor.getPort());
-            message.put("predecessor", predecessor.getPort());
-
-
-            // String msg = "probe:" + self.getIp() + "," + self.getPort() + "," + self.toString();
-            System.out.println(successor);
+            message.put("predeccesor", predecessor == null ? "null" : predecessor.getPort());
+            message.put("successor", successor == null ? "null" : successor.getPort());
+            message.put("next", nextSuccessor == null ? "null" : nextSuccessor.getPort());
 
             socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null );
 
@@ -282,22 +311,6 @@ public class RingHandler {
                     return null;
                 }
             });
-
-
-    }
-
-    private void notifyPredecessorOfNewSuccessor() {
-        JSONObject message = new JSONObject();
-        message.put("ip", self.getIp());
-        message.put("port", self.getPort());
-        message.put("type", "successorChanged");
-
-        try {
-            socketQueue.sendMessage(predecessor, this.getSelf(), message.toString(), null);
-        } catch (IOException e) {
-            e.printStackTrace(System.err);
-            handleUnresponsivePredecessorNode();
-        }
     }
 
     public void updateNextSuccessor() {
@@ -316,7 +329,8 @@ public class RingHandler {
                 if (!successor.equalsIgnoreCase("null")) {
                     Node successorsSuccessor = new Node(successor);
                     if (!successorsSuccessor.getId().equals(this.successor.getId()))
-                        nextSuccessor = successorsSuccessor;
+
+                        setNextSuccessor(successorsSuccessor);
                 }
                 return null;
             });
@@ -521,13 +535,6 @@ public class RingHandler {
             System.out.println("Well, fuck. We are linked out. Find some node in the finger table and stabilize");
             e.printStackTrace(System.err);
         }
-    }
-
-
-
-    private void handleUnresponsivePredecessorNode() {
-        System.out.println(predecessor.toString() + " is not responding to " + self.toString());
-        predecessor = self;
     }
 
     public  void fingerProbeResponse(String clientMessage, Node node) {

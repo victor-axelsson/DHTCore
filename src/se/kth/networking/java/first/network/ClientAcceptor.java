@@ -27,7 +27,7 @@ public class ClientAcceptor extends Thread{
 
 
     private void handleClient(Socket client) throws InterruptedException {
-        System.out.println("Thread count: " + ((ThreadPoolExecutor) executorService).getActiveCount());
+        System.out.println("Thread count: " + ((ThreadPoolExecutor) executorService).getActiveCount() + ", port: " + serverSocket.getLocalPort());
         executorService.submit(new ClientSocketHandler(client, onResponse));
     }
 
@@ -56,7 +56,7 @@ public class ClientAcceptor extends Thread{
         executorService.shutdownNow();
         try {
             this.serverSocket.close();
-            if (!executorService.awaitTermination(500, TimeUnit.MILLISECONDS))
+            if (!executorService.awaitTermination(2000, TimeUnit.MILLISECONDS))
                 System.err.println("ServerSocket did not terminate");
 
         } catch (InterruptedException e) {

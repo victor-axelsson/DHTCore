@@ -235,7 +235,7 @@ public class Server {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                //System.out.println("run probe");
+                System.out.println("run probe");
                 server3.probe();
                 //System.out.println("do lookup");
 
@@ -270,8 +270,8 @@ public class Server {
     }
 
     private void stop() {
-        acceptor.shutdown();
         ringHandler.shutdown();
+        acceptor.shutdown();
     }
 
     public RingHandler getRingHandler() {
