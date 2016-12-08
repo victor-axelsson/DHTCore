@@ -582,20 +582,24 @@ public class RingHandler {
                 socketQueue.sendMessage(to, this.getSelf(), message.toString(), null);
             } catch (IOException e) {
                 e.printStackTrace(System.err);
+
+
+                /*
                 if (to.getId().equals(successor.getId())) {
                     handleUnresponsiveSuccessorNode();
-                    sendBatchAddToNode(batch, successor);
+                    //sendBatchAddToNode(batch, successor);
                 } else {
                     System.err.println("Error sending batch to " + to);
-                    sendBatchAddToNode(batch, to);
+                    //sendBatchAddToNode(batch, to);
                 }
+                */
             }
         }
     }
 
     public void onHandover(String clientMessage) {
         JSONObject message = new JSONObject(clientMessage);
-        JSONArray values = message.getJSONArray("values");
+        JSONArray values = message.getJSONArray("batch");
         for (int i = 0; i < values.length(); i++) {
             JSONObject obj = values.getJSONObject(i);
             app.store(obj.getBigInteger("key"), obj.getString("value"));
