@@ -105,6 +105,9 @@ public class Server {
                 case "lookup":
                     ringHandler.lookup(clientMessage);
                     break;
+                case "handover":
+                    ringHandler.onHandover(clientMessage);
+                    break;
                 case "lookup_response":
                     ringHandler.deliverLookup(clientMessage);
                     break;
@@ -149,7 +152,7 @@ public class Server {
     public static void main(String[] args) throws IOException, InterruptedException {
         ApplicationDomain app = new ApplicationDomain() {
 
-            HashMap<BigInteger, String> store = new HashMap<>();
+            Map<BigInteger, String> store = new HashMap<>();
 
             @Override
             public void store(BigInteger key, String value) {
@@ -171,6 +174,22 @@ public class Server {
             @Override
             public void onFound(BigInteger key, String value) {
                 System.out.println("Key:" + key + ", Value: " + value);
+            }
+
+            @Override
+            public Map<BigInteger, String> split(BigInteger from, BigInteger to) {
+                Map<BigInteger, String> move = new HashMap<>();
+                Map<BigInteger, String> keep = new HashMap<>();
+
+                for (Map.Entry<BigInteger, String> entry : store.entrySet()) {
+                    if (entry.getKey().compareTo(from) >= 0 && entry.getKey().compareTo(to) == -1) {
+                        keep.put(entry.getKey(), entry.getValue());
+                    } else {
+                        move.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                store = keep;
+                return move;
             }
 
             @Override
@@ -199,7 +218,8 @@ public class Server {
         //Thread.sleep(1000);
 
 
-        //server2.addKey(new BigInteger("22"), "gravy");
+        BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
+        server2.addKey(key, "gravy");
         //server2.addKey(new BigInteger("55"), "stuff");
 
         Thread.sleep(10000);
@@ -237,10 +257,10 @@ public class Server {
             public void run() {
                 System.out.println("run probe");
                 server3.probe();
-                //System.out.println("do lookup");
+                System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));
-               // server1.lookup(new BigInteger("22"));
+                server1.lookup(key);
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }

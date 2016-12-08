@@ -11,5 +11,6 @@ public interface ApplicationDomain {
     String get(BigInteger key);
     void remove(BigInteger key);
     void onFound(BigInteger key, String value);
+    Map<BigInteger, String> split(BigInteger from, BigInteger to);
     Map<BigInteger, String> getStore();
 }

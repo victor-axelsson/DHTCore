@@ -39,7 +39,6 @@ public class RingHandler {
         this.predecessor = newPredecessor;
 
         if (newPredecessor!= null && !getSelf().equals(newPredecessor)){
-            handoverDataOnNewPredecessor(newPredecessor);
 
             monitor.addMonitor(new MonitorModel(new OnResponse<String>() {
                 @Override
@@ -123,7 +122,7 @@ public class RingHandler {
                 socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null);
             } catch (IOException e) {
                 e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode(successor);
+                handleUnresponsiveSuccessorNode();
             }
         }
 
@@ -164,7 +163,7 @@ public class RingHandler {
             });
         } catch (IOException e) {
             e.printStackTrace(System.err);
-            handleUnresponsiveSuccessorNode(successor);
+            handleUnresponsiveSuccessorNode();
         }
 
     }
@@ -198,7 +197,7 @@ public class RingHandler {
                 sendNotify(other.getIp(), other.getPort());
             } catch (IOException e) {
                 e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode(other);
+                handleUnresponsiveSuccessorNode();
             }
 
         } else if (Objects.equals(otherPredesesor.getId(), self.getId())) {
@@ -211,7 +210,7 @@ public class RingHandler {
                 sendNotify(other.getIp(), other.getPort());
             } catch (IOException e) {
                 e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode(other);
+                handleUnresponsiveSuccessorNode();
             }
 
         } else {
@@ -232,7 +231,7 @@ public class RingHandler {
                     sendNotify(other.getIp(), other.getPort());
                 } catch (IOException e) {
                     e.printStackTrace(System.err);
-                    handleUnresponsiveSuccessorNode(other);
+                    handleUnresponsiveSuccessorNode();
                 }
             }
         }
@@ -253,7 +252,7 @@ public class RingHandler {
 
         } catch (IOException e) { //if exception -> node died
             e.printStackTrace(System.err);
-            handleUnresponsiveSuccessorNode(successor);
+            handleUnresponsiveSuccessorNode();
         }
     }
 
@@ -277,7 +276,7 @@ public class RingHandler {
                 socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null);
             } catch (IOException e) {
                 e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode(successor);
+                handleUnresponsiveSuccessorNode();
             }
         }
     }
@@ -341,7 +340,7 @@ public class RingHandler {
 
         } catch (IOException e) {
             e.printStackTrace(System.err);
-            handleUnresponsiveSuccessorNode(successor);
+            handleUnresponsiveSuccessorNode();
         }
 
     }
@@ -356,6 +355,7 @@ public class RingHandler {
         if (predecessor == null) {
 
             // We don't have any predecessor, life is good
+            handoverDataOnNewPredecessor(self.getId(), n.getId(), n);
             setPredecessor(n);
             response.put("status", "accept");
 
@@ -364,6 +364,7 @@ public class RingHandler {
 
             //This should be our new predecessor
             if (between(n.getId(), predecessor.getId(), self.getId())) {
+                handoverDataOnNewPredecessor(predecessor.getId(), n.getId(), n);
                 setPredecessor(n);
 
                 response.put("status", "accept");
@@ -405,7 +406,7 @@ public class RingHandler {
                 socketQueue.sendMessage(asker, this.getSelf(), message.toString(), null);
             } catch (IOException e) {
                 e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode(successor);
+                handleUnresponsiveSuccessorNode();
             }
 
         } else {
@@ -417,7 +418,7 @@ public class RingHandler {
                 socketQueue.sendMessage(lookupHelper(key), this.getSelf(), message.toString(), null);
             } catch (IOException e) {
                 e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode(successor);
+                handleUnresponsiveSuccessorNode();
             }
         }
     }
@@ -493,11 +494,11 @@ public class RingHandler {
             socketQueue.sendMessage(successor, this.getSelf(), message, null);
         } catch (IOException e) {
             e.printStackTrace(System.err);
-            handleUnresponsiveSuccessorNode(successor);
+            handleUnresponsiveSuccessorNode();
         }
     }
 
-    private synchronized void handleUnresponsiveSuccessorNode(Node unresponsive) {
+    private synchronized void handleUnresponsiveSuccessorNode() {
 
         boolean isRepsonsive = false;
         try {
@@ -520,22 +521,6 @@ public class RingHandler {
         }
     }
 
-    private void unlinkPredecessor(Node nextSuccessor, Node successor) {
-
-        JSONObject message = new JSONObject();
-        message.put("ip", self.getIp());
-        message.put("port", self.getPort());
-        message.put("type", "unlink_predecessor");
-        message.put("predecessor", successor);
-
-        try {
-            socketQueue.sendMessage(nextSuccessor, this.getSelf(), message.toString(), null);
-        } catch (IOException e) {
-            System.out.println("Well, fuck. We are linked out. Find some node in the finger table and stabilize");
-            e.printStackTrace(System.err);
-        }
-    }
-
     public  void fingerProbeResponse(String clientMessage, Node node) {
         fingers.updateTable(clientMessage);
     }
@@ -548,22 +533,11 @@ public class RingHandler {
     }
 
     private void transferStoredData() {
-        for (Map.Entry<BigInteger, String> entry : app.getStore().entrySet()) {
-            sendAddToNode(entry.getKey(), entry.getValue(), successor);
-        }
+        sendBatchAddToNode(app.split(predecessor.getId(), successor.getId()), successor);
     }
 
-    private void handoverDataOnNewPredecessor(Node newPredecessor) {
-        Set<Map.Entry<BigInteger, String>> entrySet = app.getStore().entrySet();
-        for (Map.Entry<BigInteger, String> entry : entrySet) {
-            //that means that data is between our old predecessor and new predecessor, so hand it over
-            if (predecessor == null || between(entry.getKey(), predecessor.getId(), newPredecessor.getId())) {  //TODO check!!!
-                sendAddToNode(entry.getKey(), entry.getValue(), successor);
-                System.out.println("Need to handover\nNew predecessor " + newPredecessor + "\nOld predecessor " + predecessor +
-                        "\n" + entry.getKey() + " : " + entry.getValue());
-                app.remove(entry.getKey());
-            }
-        }
+    private void handoverDataOnNewPredecessor(BigInteger from, BigInteger to, Node receiver) {
+        sendBatchAddToNode(app.split(from, to), receiver);
     }
 
     private void sendAddToNode(BigInteger key, String value, Node to) {
@@ -579,7 +553,7 @@ public class RingHandler {
         } catch (IOException e) {
             e.printStackTrace(System.err);
             if (to.getId().equals(successor.getId())) {
-                handleUnresponsiveSuccessorNode(successor);
+                handleUnresponsiveSuccessorNode();
                 sendAddToNode(key, value, to); //retry
             } else {
                 sendAddToNode(key, value, successor);
@@ -587,4 +561,44 @@ public class RingHandler {
         }
     }
 
+    private void sendBatchAddToNode(Map<BigInteger, String> batch, Node to) {
+        if (batch.size() > 0) {
+            JSONObject message = new JSONObject();
+            message.put("ip", self.getIp());
+            message.put("port", self.getPort());
+            message.put("type", "handover");
+
+            JSONArray values = new JSONArray();
+            for (Map.Entry<BigInteger, String> entry : batch.entrySet()) {
+                JSONObject value = new JSONObject();
+                value.put("key", entry.getKey());
+                value.put("value", entry.getValue());
+                values.put(value);
+            }
+
+            message.put("batch", values);
+
+            try {
+                socketQueue.sendMessage(to, this.getSelf(), message.toString(), null);
+            } catch (IOException e) {
+                e.printStackTrace(System.err);
+                if (to.getId().equals(successor.getId())) {
+                    handleUnresponsiveSuccessorNode();
+                    sendBatchAddToNode(batch, successor);
+                } else {
+                    System.err.println("Error sending batch to " + to);
+                    sendBatchAddToNode(batch, to);
+                }
+            }
+        }
+    }
+
+    public void onHandover(String clientMessage) {
+        JSONObject message = new JSONObject(clientMessage);
+        JSONArray values = message.getJSONArray("values");
+        for (int i = 0; i < values.length(); i++) {
+            JSONObject obj = values.getJSONObject(i);
+            app.store(obj.getBigInteger("key"), obj.getString("value"));
+        }
+    }
 }
