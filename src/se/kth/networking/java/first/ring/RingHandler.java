@@ -297,6 +297,12 @@ public class RingHandler {
 
                     if (status.equalsIgnoreCase("accept")) {
                         setSuccessor(node);
+
+                        if(jsonResonse.getString("successor").equalsIgnoreCase("null")){
+                            setNextSuccessor(null);
+                        }else{
+                            setNextSuccessor(new Node(jsonResonse.getString("successor")));
+                        }
                     } else {
                         // Now what? I think this will be fixed with stabilization
                         //setSuccessor(node);
@@ -345,6 +351,7 @@ public class RingHandler {
         JSONObject response = new JSONObject();
         response.put("ip", self.getIp());
         response.put("port", self.getPort());
+        response.put("successor", successor == null ? "null": successor.toString());
 
         if (predecessor == null) {
 
