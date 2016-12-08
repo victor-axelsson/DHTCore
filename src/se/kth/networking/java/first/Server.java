@@ -89,13 +89,13 @@ public class Server {
                 case "notify":
                     response = ringHandler.notifyPredecessor(node);
                     break;
-//                case "finger_probe":
-//                    //System.out.println(clientMessage.toString()); TODO debug purposes
-//                    ringHandler.handleFingerProbe(clientMessage, node);
-//                    break;
-//                case "finger_probe_response":
-//                    ringHandler.fingerProbeResponse(clientMessage, node);
-//                    break;
+                case "finger_probe":
+                    //System.out.println(clientMessage.toString()); TODO debug purposes
+                    ringHandler.handleFingerProbe(clientMessage, node);
+                    break;
+                case "finger_probe_response":
+                    ringHandler.fingerProbeResponse(clientMessage, node);
+                    break;
                 case "probe":
                     ringHandler.handleProbe(clientMessage, node);
                     break;
@@ -111,9 +111,6 @@ public class Server {
                 case "lookup_response":
                     ringHandler.deliverLookup(clientMessage);
                     break;
-//                case "successorChanged":
-//                    ringHandler.updateNextSuccessor();
-//                    break;
                 case "unlink_predecessor":
                     ringHandler.unlinkPredecessor(clientMessage);
                     break;
@@ -228,8 +225,8 @@ public class Server {
         server2.addKey(key, "gravy");
         //server2.addKey(new BigInteger("55"), "stuff");
 
-        Thread.sleep(10000);
-        server2.stop();
+//        Thread.sleep(10000);
+//        server2.stop();
 
         List<Server> servers = new ArrayList<>();
         servers.add(server1);

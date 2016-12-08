@@ -32,7 +32,6 @@ public class RingHandler {
 
     public void setSuccessor(Node successor) {
         this.successor = successor;
-        //updateNextSuccessor();
     }
 
     public void setPredecessor(Node newPredecessor) {
@@ -87,28 +86,28 @@ public class RingHandler {
         stabilizeTimer = new Timer();
         stabilizeTimer.scheduleAtFixedRate(stabilizeTask, delay, interval);
 
-//        TimerTask fingers = new TimerTask() {
-//            @Override
-//            public void run() {
-//                updateFingerTable();
-//            }
-//        };
-//
-//        // Set a random day so that the stabalizers don't run at the same time
-//        int interval2 = 10000;
-//        int delay2 = Helper.getHelper().getRandom(10, interval2);
-//
-//        fingerTimer = new Timer();
-//
-//        fingerTimer.scheduleAtFixedRate(fingers, delay2, interval2);
+        TimerTask fingers = new TimerTask() {
+            @Override
+            public void run() {
+                updateFingerTable();
+            }
+        };
+
+        // Set a random day so that the stabalizers don't run at the same time
+        int interval2 = 10000;
+        int delay2 = Helper.getHelper().getRandom(10, interval2);
+
+        fingerTimer = new Timer();
+
+        fingerTimer.scheduleAtFixedRate(fingers, delay2, interval2);
     }
 
     public void shutdown() {
         stabilizeTimer.cancel();
         stabilizeTimer.purge();
         monitor.stop();
-//        fingerTimer.cancel();
-//        fingerTimer.purge();
+        fingerTimer.cancel();
+        fingerTimer.purge();
         transferStoredData();
     }
 
@@ -307,12 +306,6 @@ public class RingHandler {
                         //setSuccessor(node);
                     }
 
-
-                    //updateNextSuccessor();
-//                    if (predecessor != null)
-//                        notifyPredecessorOfNewSuccessor();
-//
-
                     return null;
                 }
             });
@@ -424,20 +417,20 @@ public class RingHandler {
     }
 
     private Node lookupHelper(BigInteger id) {
-//        if (fingers.getTable() == null) return successor;
-//
-//        for (int i = fingers.getTable().size() - 1; i >= 0; i--) {
-//            Node current = fingers.getTable().get(i);
-//            Node previous = null;
-//            if (i == fingers.getTable().size() - 1) {
-//                previous = fingers.getTable().get(0);
-//            } else {
-//                previous = fingers.getTable().get(i + 1);
-//            }
-//
-//            if (between(id, previous.getId(), current.getId()))
-//                return current;
-//        }
+        if (fingers.getTable() == null) return successor;
+
+        for (int i = fingers.getTable().size() - 1; i >= 0; i--) {
+            Node current = fingers.getTable().get(i);
+            Node previous = null;
+            if (i == fingers.getTable().size() - 1) {
+                previous = fingers.getTable().get(0);
+            } else {
+                previous = fingers.getTable().get(i + 1);
+            }
+
+            if (between(id, previous.getId(), current.getId()))
+                return current;
+        }
         return successor; // never
     }
 
