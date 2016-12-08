@@ -32,7 +32,7 @@ public class RingHandler {
 
     public void setSuccessor(Node successor) {
         this.successor = successor;
-        updateNextSuccessor();
+        //updateNextSuccessor();
     }
 
     public void setPredecessor(Node newPredecessor) {
@@ -45,7 +45,6 @@ public class RingHandler {
                 @Override
                 public String onResponse(String response, Node node) {
                     predecessor = null;
-                    System.err.println("set to null");
                     return null;
                 }
             }, "predecessor", predecessor));
@@ -60,7 +59,7 @@ public class RingHandler {
                 @Override
                 public String onResponse(String response, Node node) {
                     updateNextSuccessor();
-                    System.err.println("set to null");
+                    System.out.println("next set to null");
                     return null;
                 }
             }, "next", nextSuccessor));
@@ -222,6 +221,7 @@ public class RingHandler {
                 try {
                     sendNotify(otherPredesesor.getIp(), otherPredesesor.getPort());
                     setSuccessor(otherPredesesor);
+                    setNextSuccessor(otherSuccessor);
                 } catch (IOException e) {
                     e.printStackTrace(System.err);
                     e.printStackTrace();
@@ -303,7 +303,7 @@ public class RingHandler {
                     }
 
 
-                    updateNextSuccessor();
+                    //updateNextSuccessor();
 //                    if (predecessor != null)
 //                        notifyPredecessorOfNewSuccessor();
 //
@@ -328,9 +328,7 @@ public class RingHandler {
 
                 if (!successor.equalsIgnoreCase("null")) {
                     Node successorsSuccessor = new Node(successor);
-                    if (!successorsSuccessor.getId().equals(this.successor.getId()))
-
-                        setNextSuccessor(successorsSuccessor);
+                    setNextSuccessor(successorsSuccessor);
                 }
                 return null;
             });
