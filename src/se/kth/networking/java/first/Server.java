@@ -184,7 +184,6 @@ public class Server {
         Server server1 = new Server(app, null, 5050);
         server1.start();
 
-
         Server server2 = new Server(app, null, 6060);
         server2.start();
 
@@ -237,7 +236,7 @@ public class Server {
             @Override
             public void run() {
                 //System.out.println("run probe");
-                //server3.probe();
+                server3.probe();
                 //System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));

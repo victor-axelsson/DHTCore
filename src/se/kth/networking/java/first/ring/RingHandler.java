@@ -214,6 +214,8 @@ public class RingHandler {
             JSONArray nodes = new JSONArray();
             nodes.put(new JSONObject(self.toString()));
             message.put("nodes", nodes);
+            message.put("successor", successor.getPort());
+            message.put("predecessor", predecessor.getPort());
 
 
             // String msg = "probe:" + self.getIp() + "," + self.getPort() + "," + self.toString();
