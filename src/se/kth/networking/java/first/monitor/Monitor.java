@@ -4,9 +4,7 @@ import se.kth.networking.java.first.Helper;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
  * Created by victoraxelsson on 2016-12-08.
@@ -35,13 +33,14 @@ public class Monitor {
     }
 
     private void pingAll(){
+        List<String> keysToRemove = new ArrayList<>();
         for (MonitorModel model : listeners.values()) {
             Socket s = null;
             try {
                 s = model.getNode().getAsSocket();
             } catch (IOException e) {
                 model.getOnDead().onResponse(model.getKey(), model.getNode());
-                removeMonitor(model.getKey());
+                keysToRemove.add(model.getKey());
             }finally {
                 if(s != null){
                     try {
@@ -53,6 +52,8 @@ public class Monitor {
                 }
             }
         }
+
+        for (String key : keysToRemove) removeMonitor(key);
     }
 
     public void addMonitor(MonitorModel listener){

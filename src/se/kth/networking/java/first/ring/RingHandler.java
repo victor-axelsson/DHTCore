@@ -56,12 +56,10 @@ public class RingHandler {
         this.nextSuccessor = next;
 
         if (next!= null && !getSelf().equals(next)){
-            handoverDataOnNewPredecessor(next);
-
             monitor.addMonitor(new MonitorModel(new OnResponse<String>() {
                 @Override
                 public String onResponse(String response, Node node) {
-                    nextSuccessor = null;
+                    updateNextSuccessor();
                     System.err.println("set to null");
                     return null;
                 }
@@ -249,6 +247,7 @@ public class RingHandler {
             message.put("predeccesor", predecessor == null ? "null" : predecessor.getPort());
             message.put("successor", successor == null ? "null" : successor.getPort());
             message.put("next", nextSuccessor == null ? "null" : nextSuccessor.getPort());
+            message.put("nodes", nodes);
 
             socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null );
 
@@ -261,7 +260,8 @@ public class RingHandler {
     public void handleProbe(String clientMessage, Node node) {
         JSONObject message = new JSONObject(clientMessage);
 
-        Node initiator = new Node(message.getJSONArray("nodes").get(0).toString());
+        String json = message.getJSONArray("nodes").get(0).toString();
+        Node initiator = new Node(json);
 
         //Node initiator = new Node(args[0], Integer.parseInt(args[1]));
         if (Objects.equals(initiator.getId(), self.getId())) {
@@ -299,7 +299,7 @@ public class RingHandler {
                         setSuccessor(node);
                     } else {
                         // Now what? I think this will be fixed with stabilization
-                        setSuccessor(node);
+                        //setSuccessor(node);
                     }
 
 
@@ -508,12 +508,6 @@ public class RingHandler {
         if(!isRepsonsive){
             System.out.println(successor.toString() + " is not responding to " + self.toString() + "\n" + nextSuccessor);
             if (nextSuccessor != null) {
-
-                unlinkPredecessor(nextSuccessor, successor);
-
-                if(nextSuccessor == null){
-                    System.out.println("was null");
-                }
                 setSuccessor(nextSuccessor);
             } else {
                 setSuccessor(self);
