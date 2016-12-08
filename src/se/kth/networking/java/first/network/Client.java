@@ -16,7 +16,7 @@ public class Client {
     private String payload;
     private OnResponse<String> onResponse;
 
-    private static final int TIMEOUT = 5000;
+    private static final int TIMEOUT = 2000;
 
     public Client(Socket socket, String payload, OnResponse<String> onResponse) {
         this.socket = socket;

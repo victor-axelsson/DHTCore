@@ -218,9 +218,11 @@ public class Server {
         //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
         server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
         Thread.sleep(1000);
-        server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        server3.sendNotify(server2.getRingHandler().getSelf().getIp(), server2.getRingHandler().getSelf().getPort());
         Thread.sleep(1000);
         server4.sendNotify(server3.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server1.sendNotify(server4.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
         Thread.sleep(1000);
         //Thread.sleep(1000);
 
@@ -230,27 +232,29 @@ public class Server {
         //server2.addKey(new BigInteger("55"), "stuff");
 
         Thread.sleep(10000);
-        server2.stop();
+      //  server2.stop();
 
         List<Server> servers = new ArrayList<>();
         servers.add(server1);
         servers.add(server2);
         servers.add(server3);
+        servers.add(server4);
         Thread.sleep(10000);
-        server4.getRingHandler().removeKey(new BigInteger("55"));
+    //    server4.getRingHandler().removeKey(new BigInteger("55"));
 
-        /*
+//
         for (int i = 0; i < 3; i++) {
             Server s = new Server(app);
             servers.add(s);
             s.start();
-            Thread.sleep(200);
+            Thread.sleep(2000);
             System.out.println("Started: " + i);
-            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
+      //      s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
 
 
-            Server serlectedParent = servers.get(Helper.getHelper().getRandom(0, servers.size() -1));
+            Server serlectedParent = servers.get(servers.size() - 2);
             s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
+           // serlectedParent.sendNotify(s.getRingHandler().getSelf().getIp(), s.getRingHandler().getSelf().getPort());
         }
 
         Thread.sleep(200);
@@ -259,17 +263,17 @@ public class Server {
 //        server3.probe();
        // Thread.sleep(10000);
         System.out.println("done");
-*/
+
 
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 System.out.println("run probe");
                 server3.probe();
-                System.out.println("do lookup");
+ //               System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));
-                server3.lookup(key);
+                server4.lookup(key);
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }

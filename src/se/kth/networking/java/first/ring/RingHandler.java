@@ -130,6 +130,7 @@ public class RingHandler {
     }
 
     private void stabilize() {
+        if (self.equals(successor)) return;
 
         JSONObject message = new JSONObject();
         message.put("type", "request");
@@ -259,24 +260,27 @@ public class RingHandler {
     public void handleProbe(String clientMessage, Node node) {
         JSONObject message = new JSONObject(clientMessage);
 
-        String json = message.getJSONArray("nodes").get(0).toString();
-        Node initiator = new Node(json);
+        JSONArray nodes = message.getJSONArray("nodes");
+        if (nodes.length() > 0) {
+            String json = nodes.get(0).toString();
+            Node initiator = new Node(json);
 
-        //Node initiator = new Node(args[0], Integer.parseInt(args[1]));
-        if (Objects.equals(initiator.getId(), self.getId())) {
-            System.out.println("I got it back from the ring, " + clientMessage);
-        } else {
-            try {
-                JSONObject selfProbe = new JSONObject(self.toString());
-                selfProbe.put("predeccesor", predecessor == null ? "null" : predecessor.getPort());
-                selfProbe.put("successor", successor == null ? "null" : successor.getPort());
-                selfProbe.put("next", nextSuccessor == null ? "null" : nextSuccessor.getPort());
+            //Node initiator = new Node(args[0], Integer.parseInt(args[1]));
+            if (self.equals(initiator)) {
+                System.out.println("I got it back from the ring, " + clientMessage);
+            } else {
+                try {
+                    JSONObject selfProbe = new JSONObject(self.toString());
+                    selfProbe.put("predeccesor", predecessor == null ? "null" : predecessor.getPort());
+                    selfProbe.put("successor", successor == null ? "null" : successor.getPort());
+                    selfProbe.put("next", nextSuccessor == null ? "null" : nextSuccessor.getPort());
 
-                message.put("nodes", message.getJSONArray("nodes").put(selfProbe));
-                socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null);
-            } catch (IOException e) {
-                e.printStackTrace(System.err);
-                handleUnresponsiveSuccessorNode();
+                    message.put("nodes",nodes.put(selfProbe));
+                    socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null);
+                } catch (IOException e) {
+                    e.printStackTrace(System.err);
+                    handleUnresponsiveSuccessorNode();
+                }
             }
         }
     }
@@ -305,6 +309,14 @@ public class RingHandler {
                     } else {
                         // Now what? I think this will be fixed with stabilization
                         //setSuccessor(node);
+                        if(!jsonResonse.getString("predecessor").equalsIgnoreCase("null")){
+                            Node betterSuccessor = new Node(jsonResonse.getString("predecessor"));
+                            try {
+                                sendNotify(betterSuccessor.getIp(), betterSuccessor.getPort());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
 
                     return null;
@@ -365,6 +377,7 @@ public class RingHandler {
                 return response.toString();
             } else {
                 response.put("status", "deny");
+                response.put("predecessor", predecessor == null ? "null": predecessor.toString());
                 return response.toString();
             }
         }
