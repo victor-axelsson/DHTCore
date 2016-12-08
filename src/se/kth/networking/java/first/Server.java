@@ -202,8 +202,8 @@ public class Server {
         //server2.addKey(new BigInteger("22"), "gravy");
         //server2.addKey(new BigInteger("55"), "stuff");
 
-        //Thread.sleep(10000);
-        //server2.stop();
+        Thread.sleep(10000);
+        server2.stop();
 
         List<Server> servers = new ArrayList<>();
         servers.add(server1);
@@ -261,7 +261,7 @@ public class Server {
         int interval = 3000;
         //int delay = Helper.getHelper().getRandom(10, interval);
         Timer timer = new Timer();
-        timer.scheduleAtFixedRate(task, 5000, interval);
+        timer.scheduleAtFixedRate(task, 2000, interval);
 
     }
 
