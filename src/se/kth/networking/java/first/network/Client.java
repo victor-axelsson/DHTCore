@@ -35,6 +35,7 @@ public class Client {
         } finally {
             if (writer != null) writer.close();
             if (reader != null) reader.close();
+            socket.close();
         }
     }
 

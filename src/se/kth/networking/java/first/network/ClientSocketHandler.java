@@ -57,7 +57,6 @@ public class ClientSocketHandler implements Runnable {
             }
         } catch (IOException e) {
             e.printStackTrace(System.err);
-            onResponse.onResponse("error:" + e.getMessage(), null);
         }
     }
 }
