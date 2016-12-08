@@ -189,22 +189,21 @@ public class Server {
         Server server2 = new Server(app, null, 6060);
         server2.start();
 
-        Thread.sleep(200);
-
         Server server3 = new Server(app, null, 7070);
         server3.start();
 
         //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
         server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-        Thread.sleep(200);
+        Thread.sleep(1000);
         server3.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-        Thread.sleep(200);
+        //Thread.sleep(1000);
 
-        server2.addKey(new BigInteger("22"), "gravy");
+
+        //server2.addKey(new BigInteger("22"), "gravy");
         //server2.addKey(new BigInteger("55"), "stuff");
 
-        Thread.sleep(10000);
-        server2.stop();
+        //Thread.sleep(10000);
+        //server2.stop();
 
         List<Server> servers = new ArrayList<>();
         servers.add(server1);
@@ -236,12 +235,12 @@ public class Server {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                System.out.println("run probe");
+                //System.out.println("run probe");
                 server3.probe();
-                System.out.println("do lookup");
+                //System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));
-                server1.lookup(new BigInteger("22"));
+               // server1.lookup(new BigInteger("22"));
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }

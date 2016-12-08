@@ -83,6 +83,7 @@ public class RingHandler {
         transferStoredData();
     }
 
+
     private void updateFingerTable() {
         if(!successor.getId().equals(self.getId()) && predecessor != null &&
                 !predecessor.getId().equals(self.getId())){
@@ -91,6 +92,7 @@ public class RingHandler {
             try {
                 socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null);
             } catch (IOException e) {
+                e.printStackTrace(System.err);
                 handleUnresponsiveSuccessorNode(successor);
             }
         }
@@ -131,8 +133,7 @@ public class RingHandler {
                 }
             });
         } catch (IOException e) {
-            System.out.println("Caught exception in stabilize " + e.getMessage());
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             handleUnresponsiveSuccessorNode(successor);
         }
 
@@ -166,6 +167,7 @@ public class RingHandler {
             try {
                 sendNotify(successor.getIp(), successor.getPort());
             } catch (IOException e) {
+                e.printStackTrace(System.err);
                 handleUnresponsiveSuccessorNode(successor);
             }
 
@@ -177,6 +179,7 @@ public class RingHandler {
             try {
                 sendNotify(successor.getIp(), successor.getPort());
             } catch (IOException e) {
+                e.printStackTrace(System.err);
                 handleUnresponsiveSuccessorNode(successor);
             }
 
@@ -190,6 +193,7 @@ public class RingHandler {
                     sendNotify(otherPredesesor.getIp(), otherPredesesor.getPort());
                     setSuccessor(otherPredesesor);
                 } catch (IOException e) {
+                    e.printStackTrace(System.err);
                     e.printStackTrace();
                 }
             } else {
@@ -197,7 +201,7 @@ public class RingHandler {
                 try {
                     sendNotify(successor.getIp(), successor.getPort());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     handleUnresponsiveSuccessorNode(successor);
                 }
             }
@@ -219,8 +223,7 @@ public class RingHandler {
             socketQueue.sendMessage(successor, this.getSelf(), message.toString(), null );
 
         } catch (IOException e) { //if exception -> node died
-            System.out.println("Caught exception in probe");
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             handleUnresponsiveSuccessorNode(successor);
         }
     }
@@ -291,6 +294,7 @@ public class RingHandler {
         try {
             socketQueue.sendMessage(predecessor, this.getSelf(), message.toString(), null);
         } catch (IOException e) {
+            e.printStackTrace(System.err);
             handleUnresponsivePredecessorNode();
         }
     }
@@ -317,6 +321,7 @@ public class RingHandler {
             });
 
         } catch (IOException e) {
+            e.printStackTrace(System.err);
             handleUnresponsiveSuccessorNode(successor);
         }
 
@@ -379,6 +384,7 @@ public class RingHandler {
             try {
                 socketQueue.sendMessage(asker, this.getSelf(), message.toString(), null);
             } catch (IOException e) {
+                e.printStackTrace(System.err);
                 handleUnresponsiveSuccessorNode(successor);
             }
 
@@ -390,6 +396,7 @@ public class RingHandler {
             try {
                 socketQueue.sendMessage(lookupHelper(key), this.getSelf(), message.toString(), null);
             } catch (IOException e) {
+                e.printStackTrace(System.err);
                 handleUnresponsiveSuccessorNode(successor);
             }
         }
@@ -455,6 +462,7 @@ public class RingHandler {
                     socketQueue.sendMessage(node, getSelf(), response, null);
                 } catch (IOException e) {
                     System.out.println(node.getIp() + ":" + node.getPort() + " was unresponsive"); //todo do we need to do anything else?
+                    e.printStackTrace(System.err);
                 }
 
                 return null;
@@ -464,6 +472,7 @@ public class RingHandler {
         try {
             socketQueue.sendMessage(successor, this.getSelf(), message, null);
         } catch (IOException e) {
+            e.printStackTrace(System.err);
             handleUnresponsiveSuccessorNode(successor);
         }
     }
@@ -475,6 +484,7 @@ public class RingHandler {
             successor.getAsSocket();
             isRepsonsive = true;
         } catch (IOException e) {
+            e.printStackTrace(System.err);
             isRepsonsive = false;
         }
 
@@ -508,6 +518,7 @@ public class RingHandler {
             socketQueue.sendMessage(nextSuccessor, this.getSelf(), message.toString(), null);
         } catch (IOException e) {
             System.out.println("Well, fuck. We are linked out. Find some node in the finger table and stabilize");
+            e.printStackTrace(System.err);
         }
     }
 
@@ -559,6 +570,7 @@ public class RingHandler {
         try {
             socketQueue.sendMessage(to, this.getSelf(), message.toString(), null);
         } catch (IOException e) {
+            e.printStackTrace(System.err);
             if (to.getId().equals(successor.getId())) {
                 handleUnresponsiveSuccessorNode(successor);
                 sendAddToNode(key, value, to); //retry

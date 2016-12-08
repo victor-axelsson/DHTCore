@@ -38,10 +38,9 @@ public class ClientAcceptor extends Thread{
             Socket client = null;
             try {
                 client = serverSocket.accept();
-                System.out.println("Client acceptor accepting");
                 handleClient(client);
             } catch (IOException e) {
-                System.out.println("Socket was closed in ClientAcceptor, stop execution of the node " +
+                System.err.println("Socket was closed in ClientAcceptor, stop execution of the node " +
                         serverSocket.getInetAddress().getHostName() + ":" + serverSocket.getLocalPort());
                 running = false;
             } catch (InterruptedException e) {
