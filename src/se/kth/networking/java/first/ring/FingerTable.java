@@ -102,7 +102,7 @@ public class FingerTable {
 
         System.out.println("Table is " + table);
 
-        saveTable();
+       // saveTable();
     }
 
     private void saveTable(){

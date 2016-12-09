@@ -21,6 +21,8 @@ public class Server {
     private RingHandler ringHandler;
     private ClientAcceptor acceptor;
     private ApplicationDomain app;
+    private static long start;
+    private static long end;
 
 
     public Server(ApplicationDomain app, String ip, int port) {
@@ -173,6 +175,8 @@ public class Server {
 
             @Override
             public void onFound(BigInteger key, String value) {
+                end = System.currentTimeMillis();
+//                System.err.println("Time:" + ((end - start) / 1000.0) + " sec");
                 System.out.println("Key:" + key + ", Value: " + value);
             }
 
@@ -242,20 +246,20 @@ public class Server {
         Thread.sleep(10000);
     //    server4.getRingHandler().removeKey(new BigInteger("55"));
 
+
+//        for (int i = 0; i < 57; i++) {
+//            Server s = new Server(app);
+//            servers.add(s);
+//            s.start();
+//            Thread.sleep(500);
+//            System.out.println("Started: " + i);
+//            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
 //
-        for (int i = 0; i < 3; i++) {
-            Server s = new Server(app);
-            servers.add(s);
-            s.start();
-            Thread.sleep(2000);
-            System.out.println("Started: " + i);
-      //      s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
-
-
-            Server serlectedParent = servers.get(servers.size() - 2);
-            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
-           // serlectedParent.sendNotify(s.getRingHandler().getSelf().getIp(), s.getRingHandler().getSelf().getPort());
-        }
+//
+//            Server serlectedParent = servers.get(servers.size() - 2);
+//            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
+//           // serlectedParent.sendNotify(s.getRingHandler().getSelf().getIp(), s.getRingHandler().getSelf().getPort());
+//        }
 
         Thread.sleep(200);
         //server2.stop();
@@ -270,10 +274,11 @@ public class Server {
             public void run() {
                 System.out.println("run probe");
                 server3.probe();
- //               System.out.println("do lookup");
+                System.out.println("do lookup");
 
-                //server1.lookup(new BigInteger("55"));
-                server4.lookup(key);
+                server1.lookup(new BigInteger("55"));
+//                start = System.currentTimeMillis();
+//                servers.get(servers.size() - 1).lookup(key);
 //                for (Server s : servers) {
 //                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
 //                }
