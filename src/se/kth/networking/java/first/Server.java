@@ -352,14 +352,14 @@ public class Server {
     /**
      * Starts the Server instance
      */
-    private void start() {
+    public void start() {
         acceptor.start();
     }
 
     /**
      * This method cleanly terminates the ClientAcceptor and frees the resources
      */
-    private void stop() {
+    public void stop() {
         ringHandler.shutdown();
         acceptor.shutdown();
     }
