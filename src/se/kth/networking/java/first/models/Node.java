@@ -16,12 +16,21 @@ public class Node {
     private String ip;
     private int port;
 
+    /**
+     * Constructor of a node from an ip and port pair
+     * @param ip - ip address that can be used to communicate with the node
+     * @param port - portthat can be used to communicate with the node
+     */
     public Node(String ip, int port) {
         id = Helper.doHash(ip, port);
         this.ip = ip;
         this.port = port;
     }
 
+    /**
+     * Constructor of a node from a String that represents a JSONObject
+     * @param json - String that has an ip and port that will be used in node creation
+     */
     public Node(String json){
         JSONObject obj = new JSONObject(json);
         this.ip = obj.optString("ip");
@@ -29,22 +38,43 @@ public class Node {
         id = Helper.doHash(ip, port);
     }
 
+    /**
+     * Getter for id
+     * @return id of the node
+     */
     public BigInteger getId() {
         return id;
     }
 
+    /**
+     * Getter for ip
+     * @return ip of the node
+     */
     public String getIp() {
         return ip;
     }
 
+    /**
+     * Getter for port
+     * @return port of the node
+     */
     public int getPort() {
         return port;
     }
 
+    /**
+     * Method that is called for communication with the node
+     * @return Socket instance with the current node ip and port
+     * @throws IOException when the socket can not be created
+     */
     public Socket getAsSocket() throws IOException {
         return new Socket(ip, port);
     }
 
+    /**
+     * Representation of the node as a JSONObject that is later converted to a String
+     * @return a String representing the Node in JSON notation
+     */
     @Override
     public String toString() {
         JSONObject obj = new JSONObject();
@@ -54,6 +84,10 @@ public class Node {
         return obj.toString();
     }
 
+    /**
+     * @param o - the object with which the Node will be compared
+     * @return true, if the ip and port of o are the same as the current node, false otherwise
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -65,6 +99,10 @@ public class Node {
         return ip != null ? ip.equals(node.ip) : node.ip == null;
     }
 
+    /**
+     * Hashcode for use of nodes as keys in HashMap or HashSet
+     * @return hashcode of ip and port
+     */
     @Override
     public int hashCode() {
         int result = ip != null ? ip.hashCode() : 0;

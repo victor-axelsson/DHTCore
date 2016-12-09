@@ -23,6 +23,11 @@ public class FingerTable {
     private List<Node> table;
     RingHandler ringHandler;
 
+    /**
+     * Constructor for FingerTable instance
+     * @param self - the node that will use this instance of a finger table
+     * @param ringHandler - instance of RingHandler that is associated with self
+     */
     public FingerTable(Node self, RingHandler ringHandler) {
         this.self = self;
         this.ringHandler = ringHandler;
@@ -31,6 +36,10 @@ public class FingerTable {
         setupFingerKeys();
     }
 
+    /**
+     * Initial method to populate the fingers list with key values, that are offsets from the current node key by
+     * powers of 2 up to 128
+     */
     private void setupFingerKeys() {
         for (int i = 0; i < RING_BIT_SIZE; i++) {
             fingers.add((self.getId().add(new BigInteger(String.valueOf(2)).pow(i)).subtract(BigInteger.ONE))
@@ -38,6 +47,11 @@ public class FingerTable {
         }
     }
 
+    /**
+     * Helper method to create the initial message for finger probe call that will populate the table with the actual
+     * nodes that are responsible for keys in the fingers list
+     * @return String representing a finger probe message from the current node
+     */
     public String createFingerProbeMessage() {
         JSONObject message = new JSONObject();
         message.put("ip", self.getIp());
@@ -62,6 +76,12 @@ public class FingerTable {
         return message.toString();
     }
 
+    /**
+     * Helper method to handle a finger probe message
+     * @param message - String representing the received message
+     * @param onDone - callback method to be executed, when all of the fingers have been found
+     * @return a String that represents the finger probe message after adding all of the fingers from the current Node
+     */
     public String dealWithFingerProbe(String message, OnResponse<String> onDone) {
         JSONObject jsonMessage = new JSONObject(message);
 
@@ -91,6 +111,11 @@ public class FingerTable {
         return jsonMessage.toString();
     }
 
+    /**
+     * Method that is called, when we finish finding all of the fingers - it populates the table with the corresponding
+     * nodes
+     * @param clientMessage - message that was received after all of the fingers have been found
+     */
     public synchronized void updateTable(String clientMessage) {
         JSONObject response = new JSONObject(clientMessage);
         JSONArray fingers = response.getJSONArray("fingers");
@@ -105,6 +130,9 @@ public class FingerTable {
        // saveTable();
     }
 
+    /**
+     * Method to save the table of fingers in a file
+     */
     private void saveTable(){
 
         List<String> env = Env.getEnv();
@@ -130,6 +158,10 @@ public class FingerTable {
 
     }
 
+    /**
+     * Getter for table
+     * @return table
+     */
     public List<Node> getTable() {
         return table;
     }

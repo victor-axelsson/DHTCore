@@ -1,24 +1,24 @@
 package se.kth.networking.java.first.ring;
 
-import org.json.JSONObject;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
 import se.kth.networking.java.first.network.Client;
 
 import java.io.IOException;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by victoraxelsson on 2016-12-01.
  */
 public class SocketQueue {
 
-    public SocketQueue(){    }
-
-
-    public void sendMessage(Node node, Node from, String message, OnResponse onResponse) throws IOException {
+    /**
+     * Helper method that should be called to send a message to a node
+     * @param node - node that should receive the message
+     * @param message - String that should be send to the node
+     * @param onResponse - callback that should be executed, when the respons is received
+     * @throws IOException if there was a communication error using socket
+     */
+    public void sendMessage(Node node, String message, OnResponse onResponse) throws IOException {
 //        if (node.getId().equals(from.getId())&& !isProbeMsg(message) && !isLookupMsg(message)) {
 //            System.out.println("Try to message itself " + message);
 //        } else {
@@ -31,15 +31,6 @@ public class SocketQueue {
             c = new Client(node.getAsSocket(), message, onResponse);
             c.start();
 //        }
-    }
-
-    private boolean isLookupMsg(String message) {
-        return "lookup".equals(new JSONObject(message).getString("type"));
-
-    }
-
-    private boolean isProbeMsg(String message) {
-        return "probe".equals(new JSONObject(message).getString("type"));
     }
 
 

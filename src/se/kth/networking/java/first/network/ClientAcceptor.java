@@ -19,6 +19,12 @@ public class ClientAcceptor extends Thread{
     private ExecutorService executorService;
     private OnResponse onResponse;
 
+    /**
+     * Constructor for ClientAcceptor instance
+     * @param port - port that will be used to accept new socket connections
+     * @param onResponse - callback method to be executed after the communication
+     * @throws IOException if an error occurs during communication or accept call
+     */
     public ClientAcceptor(int port, OnResponse onResponse) throws IOException{
         this.serverSocket = new ServerSocket(port);
         this.executorService = Executors.newFixedThreadPool(500);
@@ -26,11 +32,19 @@ public class ClientAcceptor extends Thread{
     }
 
 
+    /**
+     * Helper method to submit the new socket to asynchronously handle it
+     * @param client - socket that will be used in communication
+     * @throws InterruptedException if the execution of the task was interrupted
+     */
     private void handleClient(Socket client) throws InterruptedException {
         System.out.println("Thread count: " + ((ThreadPoolExecutor) executorService).getActiveCount() + ", port: " + serverSocket.getLocalPort());
         executorService.submit(new ClientSocketHandler(client, onResponse));
     }
 
+    /**
+     * The actual handling of the socket on the server side, after it has been created using accept()
+     */
     @Override
     public void run() {
         boolean running = true;
@@ -52,6 +66,9 @@ public class ClientAcceptor extends Thread{
         }
     }
 
+    /**
+     * This method cleanly terminates the ClientAcceptor and frees the resources
+     */
     public void shutdown() {
         executorService.shutdownNow();
         try {

@@ -14,11 +14,19 @@ public class ClientSocketHandler implements Runnable {
     private Socket client;
     private OnResponse<String> onResponse;
 
+    /**
+     * Constructor for ClientSocketHandler instance
+     * @param client - the socket to be used in communication
+     * @param onResponse - callback method to be executed after the response is received
+     */
     public ClientSocketHandler(Socket client, OnResponse<String> onResponse) {
         this.client = client;
         this.onResponse = onResponse;
     }
 
+    /**
+     * The actual handling of the socket on the client side
+     */
     @Override
     public void run() {
         BufferedReader reader = null;
@@ -40,12 +48,22 @@ public class ClientSocketHandler implements Runnable {
         }
     }
 
+    /**
+     * Method to properly execute callback
+     * @param msg - String that contains the resopnse
+     * @return String that is the result of callback method
+     */
     private String deliverMessage(String msg){
         JSONObject obj = new JSONObject(msg);
         Node n = new Node(msg);
-        return  onResponse.onResponse(obj.toString(), n);
+        return onResponse.onResponse(obj.toString(), n);
     }
 
+    /**
+     * Helper method to encapsulate the socket handling
+     * @param reader - input stream received from the socket
+     * @param writer - output stream received from the socket
+     */
     private void handle(BufferedReader reader, PrintWriter writer) {
         //Read the message
         String str;

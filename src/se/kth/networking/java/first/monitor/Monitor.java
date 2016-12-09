@@ -15,6 +15,10 @@ public class Monitor {
     HashMap<String, MonitorModel> listeners;
     Timer pingTimer;
 
+    /**
+     * Constructor for Monitor, initializes the listeners with an empty map and starts a task to ping all of the nodes
+     * in it every 2 seconds
+     */
     public Monitor(){
         listeners = new HashMap<>();
 
@@ -33,6 +37,10 @@ public class Monitor {
         pingTimer.scheduleAtFixedRate(pingTask, delay, interval);
     }
 
+    /**
+     * A method to go through the listeners HashMap and try to ping every MonitorModel in it. If it is not responsive,
+     * the callback is executed.
+     */
     private void pingAll(){
         List<String> keysToRemove = new ArrayList<>();
         for (MonitorModel model : listeners.values()) {
@@ -57,14 +65,25 @@ public class Monitor {
         for (String key : keysToRemove) removeMonitor(key);
     }
 
+    /**
+     * Adds a MonitorModel to the listeners. After addition the node starts being checked in pingAll
+     * @param listener - a MonitorModel to be added to listeners
+     */
     public void addMonitor(MonitorModel listener){
         listeners.put(listener.getKey(), listener);
     }
 
+    /**
+     * Removes a MonitorModel from listeners. After removal the node stops being checked in pingAll
+     * @param key
+     */
     public void removeMonitor(String key){
         listeners.remove(key);
     }
 
+    /**
+     * Stops the Monitor activity, purges the pingTimer and cancels future tasks for it, also cleares listeners
+     */
     public void stop(){
         pingTimer.cancel();
         pingTimer.purge();
@@ -72,6 +91,11 @@ public class Monitor {
         pingTimer = null;
     }
 
+    /**
+     * A method to check if a Node is responsive
+     * @param node - node to be checked
+     * @return true, if the node can be reached, false otherwise
+     */
     public static boolean isResponsive(Node node) {
         Socket s = null;
         try {

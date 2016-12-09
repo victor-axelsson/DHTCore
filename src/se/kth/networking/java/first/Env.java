@@ -12,6 +12,10 @@ import java.util.List;
  */
 public class Env {
 
+    /**
+     * Loads an env.txt file into memory
+     * @return list of environment variables
+     */
     public static List<String> getEnv(){
         List<String> vars = new ArrayList<>();
         BufferedReader br = null;

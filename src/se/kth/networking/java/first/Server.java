@@ -7,10 +7,8 @@ import se.kth.networking.java.first.network.ClientAcceptor;
 import se.kth.networking.java.first.ring.RingHandler;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.*;
 
 /**
@@ -25,6 +23,12 @@ public class Server {
     private static long end;
 
 
+    /**
+     * Constructor for a Server instance
+     * @param app - implementation of ApplicationDomain interface
+     * @param ip - ip of the Server
+     * @param port - port of the Server
+     */
     public Server(ApplicationDomain app, String ip, int port) {
         this.app = app;
         //Default to localhost
@@ -47,14 +51,27 @@ public class Server {
         }
     }
 
+    /**
+     * Constructor for a Server instance that runs on localhost and automatically selects a free port to use
+     * @param app - implementation of ApplicationDomain interface
+     */
     public Server(ApplicationDomain app) {
         this(app, null, selectAFreePort());
     }
 
+    /**
+     * Constructor for a Server instance that runs on the ip address and automatically selects a free port to use
+     * @param app - implementation of ApplicationDomain interface
+     * @param ip - ip of the Server
+     */
     public Server(ApplicationDomain app, String ip) {
         this(app, ip, selectAFreePort());
     }
 
+    /**
+     * Helper method to select a free port on the current machine
+     * @return integer calue representing a free port to use
+     */
     private static int selectAFreePort(){
         ServerSocket socket = null;
         int port = 0;
@@ -68,10 +85,21 @@ public class Server {
         return port;
     }
 
+    /**
+     * Validation of the message
+     * @param msg - message to be validated
+     * @return true if message is valid, false otherwise
+     */
     private boolean isValidMessage(String msg){
         return msg != null;
     }
 
+    /**
+     * Main method in server that is used to handle incoming messages
+     * @param clientMessage - incoming message from another node
+     * @param node - node that has sent the message
+     * @return response to the message
+     */
     private synchronized String handleMessage(String clientMessage, Node node){
 
         String response = "Bad request";
@@ -93,16 +121,16 @@ public class Server {
                     break;
                 case "finger_probe":
                     //System.out.println(clientMessage.toString()); TODO debug purposes
-                    ringHandler.handleFingerProbe(clientMessage, node);
+                    ringHandler.handleFingerProbe(clientMessage);
                     break;
                 case "finger_probe_response":
-                    ringHandler.fingerProbeResponse(clientMessage, node);
+                    ringHandler.fingerProbeResponse(clientMessage);
                     break;
                 case "probe":
-                    ringHandler.handleProbe(clientMessage, node);
+                    ringHandler.handleProbe(clientMessage);
                     break;
                 case "request":
-                    response = ringHandler.onRequest(clientMessage, node);
+                    response = ringHandler.onRequest();
                     break;
                 case "lookup":
                     ringHandler.lookup(clientMessage);
@@ -131,14 +159,28 @@ public class Server {
         return response;
     }
 
+    /**
+     * Helper method to add a key on the current server
+     * @param key - a BigInteger that represents the key to be used to access value
+     * @param value - a String that should be stored under the key
+     */
     public void addKey(BigInteger key, String value){
         ringHandler.addKey(key, value);
     }
 
+    /**
+     * Helper method to initiate a lookup from the current server
+     * @param key - a BigInteger that represents the key to be used to access value
+     */
     public void lookup(BigInteger key){
         ringHandler.lookup(key, ringHandler.getSelf());
     }
 
+    /**
+     * Helper method to send notify from the current server
+     * @param ip - ip of the Node to which notify will be sent
+     * @param port - port of the Node to which notify will be sent
+     */
     public void sendNotify(String ip, int port){
         try {
             ringHandler.sendNotify(ip, port);
@@ -147,10 +189,19 @@ public class Server {
         }
     }
 
+    /**
+     * Helper method to initiate a probe from the current server
+     */
     public void probe(){
         ringHandler.probe();
     }
 
+    /**
+     * Method for testing purposes
+     * @param args
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public static void main(String[] args) throws IOException, InterruptedException {
         ApplicationDomain app = new ApplicationDomain() {
 
@@ -194,11 +245,6 @@ public class Server {
                 }
                 store = keep;
                 return move;
-            }
-
-            @Override
-            public Map<BigInteger, String> getStore() {
-                return store;
             }
         };
 
@@ -303,15 +349,25 @@ public class Server {
 
     }
 
+    /**
+     * Starts the Server instance
+     */
     private void start() {
         acceptor.start();
     }
 
+    /**
+     * This method cleanly terminates the ClientAcceptor and frees the resources
+     */
     private void stop() {
         ringHandler.shutdown();
         acceptor.shutdown();
     }
 
+    /**
+     * Getter for ringHandler
+     * @return ringHandler
+     */
     public RingHandler getRingHandler() {
         return ringHandler;
     }
