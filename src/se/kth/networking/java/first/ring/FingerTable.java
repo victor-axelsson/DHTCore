@@ -66,12 +66,24 @@ public class FingerTable {
             if (!ringHandler.isThisOurKey(fingers.get(i))){
                 keys.add(fingers.get(i));
             } else{
-                myKeys.add(new JSONObject(self));
+                myKeys.add(new JSONObject(self.toString()));
             }
         }
-        message.put("keys", keys);
 
-        message.put("fingers", myKeys);
+        JSONArray jsonKeys = new JSONArray();
+        for (int i = 0; i < keys.size(); i++){
+            BigInteger k = keys.get(i);
+            jsonKeys.put(k.toString());
+        }
+        message.put("keys", jsonKeys);
+
+
+        JSONArray myJsonKeys = new JSONArray();
+        for (int i = 0; i < myKeys.size(); i++){
+            myJsonKeys.put(myKeys.get(i));
+        }
+        message.put("fingers", myJsonKeys);
+
 
         return message.toString();
     }
@@ -89,17 +101,20 @@ public class FingerTable {
         List<Object> keys = jsonMessage.getJSONArray("keys").toList();
         List<BigInteger> notFoundKeys = new ArrayList<>();
 
+        JSONArray notFoundKeysJson = new JSONArray();
+
         for (int i = 0; i < keys.size(); i++) {
             BigInteger key = new BigInteger(keys.get(i).toString());
             if (ringHandler.isThisOurKey(key)) {
                 jsonMessage.getJSONArray("fingers").put(new JSONObject(self.toString()));
             } else {
+                notFoundKeysJson.put(key.toString());
                 notFoundKeys.add(key);
             }
         }
 
         jsonMessage.remove("keys");
-        jsonMessage.put("keys", notFoundKeys);
+        jsonMessage.put("keys", notFoundKeysJson);
 
         if (notFoundKeys.isEmpty() || jsonMessage.getString("ip").equals(self.getIp()) && jsonMessage.getInt("port") == self.getPort()) {
             Node sender = new Node(jsonMessage.toString());

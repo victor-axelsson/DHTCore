@@ -248,19 +248,20 @@ public class Server {
             }
         };
 
+        String ip = "130.229.155.87";
 
         //Server server1 = new Server(app, "130.229.146.35", 5050);
-        Server server1 = new Server(app, null, 5050);
+        Server server1 = new Server(app, ip, 5050);
         server1.start();
 
-        Server server2 = new Server(app, null, 6060);
+        Server server2 = new Server(app, ip, 6060);
         server2.start();
 
-        Server server3 = new Server(app, null, 7070);
+        Server server3 = new Server(app, ip, 7070);
         server3.start();
 
 
-        Server server4 = new Server(app, null, 7071);
+        Server server4 = new Server(app, ip, 7071);
         server4.start();
 
         Thread.sleep(1000);
@@ -277,8 +278,8 @@ public class Server {
         //Thread.sleep(1000);
 
 
-        BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
-        server2.addKey(key, "gravy");
+        //BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
+        //server2.addKey(key, "gravy");
         //server2.addKey(new BigInteger("55"), "stuff");
 
         Thread.sleep(10000);
@@ -322,7 +323,7 @@ public class Server {
                 server3.probe();
                 System.out.println("do lookup");
 
-                server1.lookup(new BigInteger("55"));
+                //server1.lookup(new BigInteger("55"));
 //                start = System.currentTimeMillis();
 //                servers.get(servers.size() - 1).lookup(key);
 //                for (Server s : servers) {
