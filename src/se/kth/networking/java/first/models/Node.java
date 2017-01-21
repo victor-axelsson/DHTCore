@@ -78,7 +78,7 @@ public class Node {
     @Override
     public String toString() {
         JSONObject obj = new JSONObject();
-        obj.put("id", id);
+        obj.put("id", id.toString());
         obj.put("ip", ip);
         obj.put("port", port);
         return obj.toString();

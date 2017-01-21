@@ -8,6 +8,7 @@ import se.kth.networking.java.first.ring.RingHandler;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.util.*;
 
@@ -248,7 +249,7 @@ public class Server {
             }
         };
 
-        String ip = "130.229.155.87";
+        String ip = "192.168.0.3";
 
         //Server server1 = new Server(app, "130.229.146.35", 5050);
         Server server1 = new Server(app, ip, 5050);
@@ -321,7 +322,7 @@ public class Server {
             public void run() {
                 System.out.println("run probe");
                 server3.probe();
-                System.out.println("do lookup");
+                //System.out.println("do lookup");
 
                 //server1.lookup(new BigInteger("55"));
 //                start = System.currentTimeMillis();
@@ -347,6 +348,10 @@ public class Server {
         //int delay = Helper.getHelper().getRandom(10, interval);
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(task, 2000, interval);
+
+
+        BigInteger key = server3.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
+        server2.addKey(key, "gravy");
 
     }
 

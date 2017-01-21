@@ -13,6 +13,9 @@ import se.kth.networking.java.first.monitor.MonitorModel;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by victoraxelsson on 2016-11-04.
@@ -29,6 +32,7 @@ public class RingHandler {
     private Timer fingerTimer;
     private SocketQueue socketQueue;
     private Monitor monitor;
+    private ExecutorService executorService;
 
     /**
      * Setter method for the successor. Should be called every time we need to set the successor
@@ -90,6 +94,7 @@ public class RingHandler {
         this.fingers = new FingerTable(self, this);
         socketQueue = new SocketQueue();
         monitor = new Monitor();
+        executorService = Executors.newFixedThreadPool(50);
 
         TimerTask stabilizeTask = new TimerTask() {
             @Override
@@ -131,6 +136,16 @@ public class RingHandler {
         fingerTimer.cancel();
         fingerTimer.purge();
         transferStoredData();
+
+        //Shutdown the executer service
+        executorService.shutdownNow();
+        try {
+            if (!executorService.awaitTermination(2000, TimeUnit.MILLISECONDS))
+                System.err.println("ServerSocket did not terminate");
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -285,10 +300,13 @@ public class RingHandler {
             JSONObject message = new JSONObject();
             message.put("type", "probe");
             JSONArray nodes = new JSONArray();
-            nodes.put(new JSONObject(self.toString()));
-            message.put("predeccesor", predecessor == null ? "null" : predecessor.getPort());
-            message.put("successor", successor == null ? "null" : successor.getPort());
-            message.put("next", nextSuccessor == null ? "null" : nextSuccessor.getPort());
+
+            JSONObject selfProbe = new JSONObject(self.toString());
+            selfProbe.put("predeccesor", predecessor == null ? "null" : predecessor.getPort());
+            selfProbe.put("successor", successor == null ? "null" : successor.getPort());
+            selfProbe.put("next", nextSuccessor == null ? "null" : nextSuccessor.getPort());
+            nodes.put(selfProbe);
+
             message.put("nodes", nodes);
 
             socketQueue.sendMessage(successor, message.toString(), null );
@@ -321,7 +339,8 @@ public class RingHandler {
                     selfProbe.put("successor", successor == null ? "null" : successor.getPort());
                     selfProbe.put("next", nextSuccessor == null ? "null" : nextSuccessor.getPort());
 
-                    message.put("nodes",nodes.put(selfProbe));
+                    nodes.put(selfProbe);
+                    message.put("nodes", nodes);
                     socketQueue.sendMessage(successor, message.toString(), null);
                 } catch (IOException e) {
                     e.printStackTrace(System.err);
@@ -456,7 +475,20 @@ public class RingHandler {
             //System.out.println(self.getId() + " stored " + key + ":" + value); //debug stored
             app.store(key, value);
         } else {
+
             sendAddToNode(key, value, lookupHelper(key));
+
+            /*
+            //This needs to be run i a sepparate thread so that we can give response.
+            //The response of the progagated response is not our responsibility
+            Runnable deadlockPrevention =  new Runnable() {
+                @Override
+                public void run() {
+                    sendAddToNode(key, value, lookupHelper(key));
+                }
+            };
+           executorService.execute(deadlockPrevention);
+           */
         }
     }
 
@@ -477,7 +509,7 @@ public class RingHandler {
             String value = app.get(key);
 
             message.put("type", "lookup_response");
-            message.put("key", key);
+            message.put("key", key.toString());
             message.put("value", value == null ? "null" : value);
 
             try {
@@ -489,7 +521,7 @@ public class RingHandler {
 
         } else {
             message.put("type", "lookup");
-            message.put("key", key);
+            message.put("key", key.toString());
             message.put("asker", new JSONObject(asker.toString()));
 
             try {
@@ -673,7 +705,7 @@ public class RingHandler {
         message.put("ip", self.getIp());
         message.put("port", self.getPort());
         message.put("type", "add");
-        message.put("key", key);
+        message.put("key", key.toString());
         message.put("value", value);
 
         try {
@@ -767,7 +799,7 @@ public class RingHandler {
         message.put("ip", self.getIp());
         message.put("port", self.getPort());
         message.put("type", "remove");
-        message.put("key", key);
+        message.put("key", key.toString());
 
         try {
             socketQueue.sendMessage(node, message.toString(), null);

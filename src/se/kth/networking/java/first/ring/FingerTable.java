@@ -98,13 +98,16 @@ public class FingerTable {
         JSONObject jsonMessage = new JSONObject(message);
 
 
-        List<Object> keys = jsonMessage.getJSONArray("keys").toList();
+        JSONArray jsonKeys = jsonMessage.getJSONArray("keys");
+        //List<Object> keys = jsonMessage.getJSONArray("keys").toList();
+
+
         List<BigInteger> notFoundKeys = new ArrayList<>();
 
         JSONArray notFoundKeysJson = new JSONArray();
 
-        for (int i = 0; i < keys.size(); i++) {
-            BigInteger key = new BigInteger(keys.get(i).toString());
+        for (int i = 0; i < jsonKeys.length(); i++) {
+            BigInteger key = new BigInteger(jsonKeys.get(i).toString());
             if (ringHandler.isThisOurKey(key)) {
                 jsonMessage.getJSONArray("fingers").put(new JSONObject(self.toString()));
             } else {

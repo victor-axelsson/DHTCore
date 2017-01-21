@@ -70,6 +70,8 @@ public class ClientSocketHandler implements Runnable {
         try {
             while ((str = reader.readLine()) != null) {
                 String res = deliverMessage(str);
+
+
                 writer.write(res + "\n");
                 writer.flush();
             }
