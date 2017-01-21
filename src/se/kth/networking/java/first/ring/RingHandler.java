@@ -13,8 +13,6 @@ import se.kth.networking.java.first.monitor.MonitorModel;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,7 +30,6 @@ public class RingHandler {
     private Timer fingerTimer;
     private SocketQueue socketQueue;
     private Monitor monitor;
-    private ExecutorService executorService;
 
     /**
      * Setter method for the successor. Should be called every time we need to set the successor
@@ -94,7 +91,6 @@ public class RingHandler {
         this.fingers = new FingerTable(self, this);
         socketQueue = new SocketQueue();
         monitor = new Monitor();
-        executorService = Executors.newFixedThreadPool(50);
 
         TimerTask stabilizeTask = new TimerTask() {
             @Override
@@ -136,16 +132,6 @@ public class RingHandler {
         fingerTimer.cancel();
         fingerTimer.purge();
         transferStoredData();
-
-        //Shutdown the executer service
-        executorService.shutdownNow();
-        try {
-            if (!executorService.awaitTermination(2000, TimeUnit.MILLISECONDS))
-                System.err.println("ServerSocket did not terminate");
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
 
@@ -477,18 +463,6 @@ public class RingHandler {
         } else {
 
             sendAddToNode(key, value, lookupHelper(key));
-
-            /*
-            //This needs to be run i a sepparate thread so that we can give response.
-            //The response of the progagated response is not our responsibility
-            Runnable deadlockPrevention =  new Runnable() {
-                @Override
-                public void run() {
-                    sendAddToNode(key, value, lookupHelper(key));
-                }
-            };
-           executorService.execute(deadlockPrevention);
-           */
         }
     }
 

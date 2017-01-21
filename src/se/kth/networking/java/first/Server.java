@@ -2,6 +2,7 @@ package se.kth.networking.java.first;
 
 import org.json.JSONObject;
 import se.kth.networking.java.first.models.Node;
+import se.kth.networking.java.first.models.OnAsyncResponse;
 import se.kth.networking.java.first.models.OnResponse;
 import se.kth.networking.java.first.network.ClientAcceptor;
 import se.kth.networking.java.first.ring.RingHandler;
@@ -41,12 +42,22 @@ public class Server {
         ringHandler = new RingHandler(ip, port, app);
 
         try {
+            /*
             acceptor = new ClientAcceptor(port, new OnResponse<String>(){
                 @Override
                 public String onResponse(String response, Node node) {
                     return handleMessage(response, node);
                 }
             });
+            */
+
+            acceptor = new ClientAcceptor(port, new OnAsyncResponse<String>() {
+                @Override
+                public void onResponse(String response, Node node, OnResponse<String> onResponse) {
+                    handleMessage(response, node, onResponse);
+                }
+            });
+
         } catch (IOException e) {
             e.printStackTrace(System.err);
         }
@@ -101,7 +112,7 @@ public class Server {
      * @param node - node that has sent the message
      * @return response to the message
      */
-    private synchronized String handleMessage(String clientMessage, Node node){
+    private synchronized void handleMessage(String clientMessage, Node node, OnResponse<String> acker){
 
         String response = "Bad request";
 
@@ -112,52 +123,61 @@ public class Server {
         }catch(Exception e){
             e.printStackTrace(System.err);
             System.err.println("Could not parse message: " + clientMessage);
-            return response;
+            acker.onResponse(response, getRingHandler().getSelf());
         }
 
         if(isValidMessage(clientMessage)){
             switch (message.getString("type")){
                 case "notify":
                     response = ringHandler.notifyPredecessor(node);
+                    acker.onResponse(response, getRingHandler().getSelf());
                     break;
                 case "finger_probe":
                     //System.out.println(clientMessage.toString()); TODO debug purposes
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.handleFingerProbe(clientMessage);
                     break;
                 case "finger_probe_response":
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.fingerProbeResponse(clientMessage);
                     break;
                 case "probe":
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.handleProbe(clientMessage);
                     break;
                 case "request":
                     response = ringHandler.onRequest();
+                    acker.onResponse(response, getRingHandler().getSelf());
                     break;
                 case "lookup":
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.lookup(clientMessage);
                     break;
                 case "handover":
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.onHandover(clientMessage);
                     break;
                 case "lookup_response":
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.deliverLookup(clientMessage);
                     break;
                 case "unlink_predecessor":
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.unlinkPredecessor(clientMessage);
                     break;
                 case "add":
                     String payload = message.getString("value");
                     BigInteger key = message.getBigInteger("key");
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.addKey(key, payload);
                     break;
                 case "remove":
                     BigInteger removeKey = message.getBigInteger("key");
+                    acker.onResponse(response, getRingHandler().getSelf());
                     ringHandler.removeKey(removeKey);
                     break;
             }
         }
-
-        return response;
     }
 
     /**
@@ -350,8 +370,8 @@ public class Server {
         timer.scheduleAtFixedRate(task, 2000, interval);
 
 
-        BigInteger key = server3.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
-        server2.addKey(key, "gravy");
+        BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
+        server3.addKey(key, "gravy");
 
     }
 

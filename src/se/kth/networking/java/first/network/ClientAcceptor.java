@@ -1,5 +1,6 @@
 package se.kth.networking.java.first.network;
 
+import se.kth.networking.java.first.models.OnAsyncResponse;
 import se.kth.networking.java.first.models.OnResponse;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ public class ClientAcceptor extends Thread{
 
     private ServerSocket serverSocket;
     private ExecutorService executorService;
-    private OnResponse onResponse;
+    private OnAsyncResponse onResponse;
 
     /**
      * Constructor for ClientAcceptor instance
@@ -25,7 +26,7 @@ public class ClientAcceptor extends Thread{
      * @param onResponse - callback method to be executed after the communication
      * @throws IOException if an error occurs during communication or accept call
      */
-    public ClientAcceptor(int port, OnResponse onResponse) throws IOException{
+    public ClientAcceptor(int port, OnAsyncResponse onResponse) throws IOException{
         this.serverSocket = new ServerSocket(port);
         this.executorService = Executors.newFixedThreadPool(500);
         this.onResponse = onResponse;

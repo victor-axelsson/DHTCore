@@ -2,8 +2,10 @@ package se.kth.networking.java.first.network;
 
 import org.json.JSONObject;
 import se.kth.networking.java.first.models.Node;
+import se.kth.networking.java.first.models.OnAsyncResponse;
 import se.kth.networking.java.first.models.OnResponse;
 
+import javax.jws.Oneway;
 import java.io.*;
 import java.net.Socket;
 
@@ -12,14 +14,14 @@ import java.net.Socket;
  */
 public class ClientSocketHandler implements Runnable {
     private Socket client;
-    private OnResponse<String> onResponse;
+    private OnAsyncResponse<String> onResponse;
 
     /**
      * Constructor for ClientSocketHandler instance
      * @param client - the socket to be used in communication
      * @param onResponse - callback method to be executed after the response is received
      */
-    public ClientSocketHandler(Socket client, OnResponse<String> onResponse) {
+    public ClientSocketHandler(Socket client, OnAsyncResponse<String> onResponse) {
         this.client = client;
         this.onResponse = onResponse;
     }
@@ -53,10 +55,10 @@ public class ClientSocketHandler implements Runnable {
      * @param msg - String that contains the resopnse
      * @return String that is the result of callback method
      */
-    private String deliverMessage(String msg){
+    private void deliverMessage(String msg, OnResponse<String> callback){
         JSONObject obj = new JSONObject(msg);
         Node n = new Node(msg);
-        return onResponse.onResponse(obj.toString(), n);
+        onResponse.onResponse(obj.toString(), n, callback);
     }
 
     /**
@@ -69,11 +71,15 @@ public class ClientSocketHandler implements Runnable {
         String str;
         try {
             while ((str = reader.readLine()) != null) {
-                String res = deliverMessage(str);
+                 deliverMessage(str, new OnResponse<String>() {
+                    @Override
+                    public String onResponse(String response, Node node) {
+                        writer.write(response + "\n");
+                        writer.flush();
 
-
-                writer.write(res + "\n");
-                writer.flush();
+                        return response;
+                    }
+                 });
             }
         } catch (IOException e) {
             e.printStackTrace(System.err);
