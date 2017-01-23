@@ -5,7 +5,6 @@ import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnAsyncResponse;
 import se.kth.networking.java.first.models.OnResponse;
 
-import javax.jws.Oneway;
 import java.io.*;
 import java.net.Socket;
 

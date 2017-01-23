@@ -10,6 +10,7 @@ import se.kth.networking.java.first.ring.RingHandler;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.*;
 
@@ -269,109 +270,13 @@ public class Server {
             }
         };
 
-        String ip = "192.168.0.3";
+        String ip = InetAddress.getLocalHost().getHostAddress();//"192.168.1.1";
 
-        //Server server1 = new Server(app, "130.229.146.35", 5050);
-        Server server1 = new Server(app, ip, 5050);
-        server1.start();
-
-        Server server2 = new Server(app, ip, 6060);
-        server2.start();
-
-        Server server3 = new Server(app, ip, 7070);
-        server3.start();
-
-
-        Server server4 = new Server(app, ip, 7071);
-        server4.start();
-
-        Thread.sleep(1000);
-
-        //server1.sendNotify(server2.getRingHandler().getIp(), server2.getRingHandler().getPort());
-        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-        Thread.sleep(1000);
-        server3.sendNotify(server2.getRingHandler().getSelf().getIp(), server2.getRingHandler().getSelf().getPort());
-        Thread.sleep(1000);
-        server4.sendNotify(server3.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
-        Thread.sleep(1000);
-        server1.sendNotify(server4.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
-        Thread.sleep(1000);
-        //Thread.sleep(1000);
-
-
-        //BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
-        //server2.addKey(key, "gravy");
-        //server2.addKey(new BigInteger("55"), "stuff");
-
-        Thread.sleep(10000);
-      //  server2.stop();
-
-        List<Server> servers = new ArrayList<>();
-        servers.add(server1);
-        servers.add(server2);
-        servers.add(server3);
-        servers.add(server4);
-        Thread.sleep(10000);
-    //    server4.getRingHandler().removeKey(new BigInteger("55"));
-
-
-//        for (int i = 0; i < 57; i++) {
-//            Server s = new Server(app);
-//            servers.add(s);
-//            s.start();
-//            Thread.sleep(500);
-//            System.out.println("Started: " + i);
-//            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
-//
-//
-//            Server serlectedParent = servers.get(servers.size() - 2);
-//            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
-//           // serlectedParent.sendNotify(s.getRingHandler().getSelf().getIp(), s.getRingHandler().getSelf().getPort());
-//        }
-
-        Thread.sleep(200);
-        //server2.stop();
-
-//        server3.probe();
-       // Thread.sleep(10000);
-        System.out.println("done");
-
-
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                System.out.println("run probe");
-                server3.probe();
-                //System.out.println("do lookup");
-
-                //server1.lookup(new BigInteger("55"));
-//                start = System.currentTimeMillis();
-//                servers.get(servers.size() - 1).lookup(key);
-//                for (Server s : servers) {
-//                    server1.lookup(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE));
-//                }
-
-//                Server s = new Server(app);
-//                s.start();
-//                s.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
-            }
-        };
-
-        /*
-
-        server2.stop();
-
-        //Set a random day so that the stabalizers don't run at the same time
-
-        */
-        int interval = 3000;
-        //int delay = Helper.getHelper().getRandom(10, interval);
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(task, 2000, interval);
-
-
-        BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
-        server3.addKey(key, "gravy");
+        //fourNodesNoAddNoFailure(app, ip);
+        //fourNodesNoAddWithFailure(app, ip);
+        //fourNodesWithAddNoFailure(app, ip);
+        //fourNodesWithAddWithFailure(app, ip);
+        nNodesWithAdd(app, ip, 6);  //Here are some problems, was not able to find why
 
     }
 
@@ -396,5 +301,268 @@ public class Server {
      */
     public RingHandler getRingHandler() {
         return ringHandler;
+    }
+
+    private static void fourNodesNoAddNoFailure(ApplicationDomain app, String ip) throws InterruptedException {
+        Server server1 = new Server(app, ip, 5050);
+        server1.start();
+
+        Server server2 = new Server(app, ip, 6060);
+        server2.start();
+
+        Server server3 = new Server(app, ip, 7070);
+        server3.start();
+
+        Server server4 = new Server(app, ip, 7071);
+        server4.start();
+
+        Thread.sleep(1000);
+
+        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server3.sendNotify(server2.getRingHandler().getSelf().getIp(), server2.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server4.sendNotify(server3.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server1.sendNotify(server4.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+
+        System.out.println("done");
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("run probe");
+                server3.probe();
+            }
+        };
+
+        int interval = 3000;
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(task, 2000, interval);
+    }
+
+    private static void fourNodesWithAddNoFailure(ApplicationDomain app, String ip) throws InterruptedException {
+        Server server1 = new Server(app, ip, 5050);
+        server1.start();
+
+        Server server2 = new Server(app, ip, 6060);
+        server2.start();
+
+        Server server3 = new Server(app, ip, 7070);
+        server3.start();
+
+        Server server4 = new Server(app, ip, 7071);
+        server4.start();
+
+        Thread.sleep(1000);
+
+        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server3.sendNotify(server2.getRingHandler().getSelf().getIp(), server2.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server4.sendNotify(server3.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server1.sendNotify(server4.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+
+        List<Server> servers = new ArrayList<>();
+        servers.add(server1);
+        servers.add(server2);
+        servers.add(server3);
+        servers.add(server4);
+
+        Thread.sleep(200);
+        BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
+        server3.addKey(key, "gravy");
+
+        System.out.println("done");
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("run probe");
+                server3.probe();
+                System.out.println("do lookup");
+                server1.lookup(key);
+            }
+        };
+
+        int interval = 3000;
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(task, 2000, interval);
+    }
+
+    private static void fourNodesNoAddWithFailure(ApplicationDomain app, String ip) throws InterruptedException {
+        Server server1 = new Server(app, ip, 5050);
+        server1.start();
+
+        Server server2 = new Server(app, ip, 6060);
+        server2.start();
+
+        Server server3 = new Server(app, ip, 7070);
+        server3.start();
+
+        Server server4 = new Server(app, ip, 7071);
+        server4.start();
+
+        Thread.sleep(1000);
+
+        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server3.sendNotify(server2.getRingHandler().getSelf().getIp(), server2.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server4.sendNotify(server3.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server1.sendNotify(server4.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+
+        List<Server> servers = new ArrayList<>();
+        servers.add(server1);
+        servers.add(server2);
+        servers.add(server3);
+        servers.add(server4);
+
+        System.out.println("done");
+        Thread.sleep(5000);
+        server2.stop();
+        System.out.println("node stopped");
+
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("run probe");
+                server3.probe();
+            }
+        };
+
+        int interval = 3000;
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(task, 2000, interval);
+    }
+
+    private static void fourNodesWithAddWithFailure(ApplicationDomain app, String ip) throws InterruptedException {
+        Server server1 = new Server(app, ip, 5050);
+        server1.start();
+
+        Server server2 = new Server(app, ip, 6060);
+        server2.start();
+
+        Server server3 = new Server(app, ip, 7070);
+        server3.start();
+
+        Server server4 = new Server(app, ip, 7071);
+        server4.start();
+
+        Thread.sleep(1000);
+
+        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server3.sendNotify(server2.getRingHandler().getSelf().getIp(), server2.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server4.sendNotify(server3.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server1.sendNotify(server4.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+
+        List<Server> servers = new ArrayList<>();
+        servers.add(server1);
+        servers.add(server2);
+        servers.add(server3);
+        servers.add(server4);
+
+        Thread.sleep(200);
+        BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
+        server3.addKey(key, "gravy");
+
+        System.out.println("done");
+        Thread.sleep(5000);
+        server2.stop();
+        System.out.println("node stopped");
+
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("run probe");
+                server3.probe();
+                System.out.println("do lookup");
+                server1.lookup(key);
+            }
+        };
+
+        int interval = 3000;
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(task, 2000, interval);
+    }
+
+    private static void nNodesWithAdd(ApplicationDomain app, String ip, int n) throws InterruptedException {
+        Server server1 = new Server(app, ip, 5050);
+        server1.start();
+
+        Server server2 = new Server(app, ip, 6060);
+        server2.start();
+
+        Server server3 = new Server(app, ip, 7070);
+        server3.start();
+
+
+        Server server4 = new Server(app, ip, 7071);
+        server4.start();
+
+        Thread.sleep(1000);
+
+        server2.sendNotify(server1.getRingHandler().getSelf().getIp(), server1.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server3.sendNotify(server2.getRingHandler().getSelf().getIp(), server2.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server4.sendNotify(server3.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+        server1.sendNotify(server4.getRingHandler().getSelf().getIp(), server3.getRingHandler().getSelf().getPort());
+        Thread.sleep(1000);
+
+        List<Server> servers = new ArrayList<>();
+        servers.add(server1);
+        servers.add(server2);
+        servers.add(server3);
+        servers.add(server4);
+        Thread.sleep(10000);
+
+        for (int i = 0; i < n - 4; i++) {
+            Server s = new Server(app);
+            servers.add(s);
+            s.start();
+            Thread.sleep(500);
+            System.out.println("Started: " + i);
+            s.addKey(s.getRingHandler().getSelf().getId().subtract(BigInteger.ONE), "gravy" + i);
+
+            Server serlectedParent = servers.get(servers.size() - 2);
+            s.sendNotify(serlectedParent.getRingHandler().getSelf().getIp(), serlectedParent.getRingHandler().getSelf().getPort());
+           // serlectedParent.sendNotify(s.getRingHandler().getSelf().getIp(), s.getRingHandler().getSelf().getPort());
+        }
+
+        Thread.sleep(200);
+        //server2.stop();
+        BigInteger key = server2.getRingHandler().getSelf().getId().subtract(BigInteger.ONE);
+        server3.addKey(key, "gravy");
+
+        System.out.println("done");
+
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("run probe");
+                server3.probe();
+                System.out.println("do lookup");
+                server1.lookup(key);
+            }
+        };
+
+        int interval = 3000;
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(task, 2000, interval);
+
     }
 }
