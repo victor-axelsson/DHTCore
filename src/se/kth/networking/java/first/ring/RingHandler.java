@@ -624,10 +624,14 @@ public class RingHandler {
     private synchronized void handleUnresponsiveSuccessorNode() {
         boolean isRepsonsive = Monitor.isResponsive(successor);
 
-        System.out.println("Was responsive:" + isRepsonsive);
+        System.out.println("Was responsive: " + isRepsonsive);
 
         if(!isRepsonsive){
             System.out.println(successor.toString() + " is not responding to " + self.toString() + "\n" + nextSuccessor);
+            JSONObject logMessage = new JSONObject();
+            logMessage.put("from", this.getSelf().getId().toString());
+            logMessage.put("to", successor.getId().toString());
+            SocketIOLogger.getLogger().log("unresponsive", logMessage.toString());
             if (nextSuccessor != null) {
                 setSuccessor(nextSuccessor);
             } else {

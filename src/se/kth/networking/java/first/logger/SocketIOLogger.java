@@ -17,7 +17,7 @@ import java.util.HashMap;
  */
 public class SocketIOLogger implements Logger {
 
-    private HashMap<SocketAddress, SocketIOClient> connected = new HashMap<>();
+    private static HashMap<SocketAddress, SocketIOClient> connected = new HashMap<>();
 
     private static SocketIOLogger instance;
     final SocketIOServer server;
@@ -29,23 +29,12 @@ public class SocketIOLogger implements Logger {
 
         server = new SocketIOServer(config);
 
-        server.addConnectListener(new ConnectListener() {
-            @Override
-            public void onConnect(SocketIOClient socketIOClient) {
-                System.out.println(socketIOClient.getRemoteAddress() + " connected");
-                addNode(socketIOClient.getRemoteAddress(), socketIOClient);
-                //socketIOClient.sendEvent("probe", "you got probed!");
-            }
+        server.addConnectListener(socketIOClient -> {
+            System.out.println(socketIOClient.getRemoteAddress() + " connected");
+            addNode(socketIOClient.getRemoteAddress(), socketIOClient);
         });
 
-        server.addDisconnectListener(new DisconnectListener() {
-            @Override
-            public void onDisconnect(SocketIOClient socketIOClient) {
-                System.out.println(socketIOClient.getRemoteAddress() + " is a traitorous scum!");
-                removeNode(socketIOClient.getRemoteAddress());
-                //socketIOClient.sendEvent("traitor", "you traitorous scum!");
-            }
-        });
+        server.addDisconnectListener(socketIOClient -> removeNode(socketIOClient.getRemoteAddress()));
 
         server.start();
     }
