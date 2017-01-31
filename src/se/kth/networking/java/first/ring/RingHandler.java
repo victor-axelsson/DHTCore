@@ -5,6 +5,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import se.kth.networking.java.first.ApplicationDomain;
 import se.kth.networking.java.first.Helper;
+import se.kth.networking.java.first.logger.Logger;
+import se.kth.networking.java.first.logger.SocketIOLogger;
 import se.kth.networking.java.first.models.Node;
 import se.kth.networking.java.first.models.OnResponse;
 import se.kth.networking.java.first.monitor.Monitor;
@@ -318,6 +320,7 @@ public class RingHandler {
             //Node initiator = new Node(args[0], Integer.parseInt(args[1]));
             if (self.equals(initiator)) {
                 System.out.println("I got it back from the ring, " + clientMessage);
+                SocketIOLogger.getLogger().log("probe", clientMessage);
             } else {
                 try {
                     JSONObject selfProbe = new JSONObject(self.toString());
